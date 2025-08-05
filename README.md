@@ -2,7 +2,7 @@
 
 Submitted by: **Rachel Bazelais**
 
-This web app: **The Hype Check is a movie trailer discussion platform built with React and Supabase. Users create posts about trailers they've watched, share their initial reactions, and engage in spoiler-protected discussions.**
+This web app: **The Hype Check is a movie trailer discussion platform built with React and Supabase. Users create posts about trailers they've watched, share their initial reactions, and engage in spoiler-protected discussions.git init**
 
 Time spent: **37** hours spent in total
 
@@ -12,7 +12,7 @@ The following **required** functionality is completed:
 
 - [ ] **Web app includes a create form that allows the user to create posts**
   - Form requires users to add a post title
-  - Forms should have the *option* for users to add: 
+  - Forms should have the *option* for users to add:
     - additional textual content
     - an image added as an external image URL
 - [ ] **Web app includes a home feed displaying previously created posts**
@@ -42,7 +42,6 @@ The following **required** functionality is completed:
   - A previously created post can be deleted from its post page
 
 The following **optional** features are implemented:
-
 
 - [ ] Web app implements pseudo-authentication
   - Users can only edit and delete posts or delete comments by entering the secret key, which is set by the user during post creation
@@ -78,7 +77,7 @@ Describe any challenges encountered while building the app.
 
 ## License
 
-    Copyright [yyyy] [name of copyright owner]
+    Copyright 2025 Rachel Bazelais
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.

@@ -1,34 +1,70 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from 'react-hot-toast'
+import { AuthProvider } from './context/AuthContext.jsx'
+import Header from './components/layout/Header'
+import Home from './pages/Home'
+import CreatePost from './pages/CreatePost'
+import PostDetail from './pages/PostDetail'
+import EditPost from './pages/EditPost'
+import Profile from './pages/Profile'
+import ProtectedRoute from './components/auth/ProtectedRoute'
 import './App.css'
 
-function App() {
-	const [count, setCount] = useState(0)
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			staleTime: 1000 * 60 * 5, // 5 minutes
+			cacheTime: 10 * 60 * 10, // 10 minutes
+		},
+	},
+})
 
-	return (
-		<>
-			<div>
-				<a href="https://vite.dev" target="_blank">
-					<img src={viteLogo} className="logo" alt="Vite logo" />
-				</a>
-				<a href="https://react.dev" target="_blank">
-					<img src={reactLogo} className="logo react" alt="React logo" />
-				</a>
-			</div>
-			<h1>Vite + React</h1>
-			<div className="card">
-				<button onClick={() => setCount((count) => count + 1)}>
-					count is {count}
-				</button>
-				<p>
-					Edit <code>src/App.jsx</code> and save to test HMR
-				</p>
-			</div>
-			<p className="read-the-docs">
-				Click on the Vite and React logos to learn more
-			</p>
-		</>
+function App() {
+	return(
+		<QueryClientProvider client={queryClient}>
+			<AuthProvider>
+				<Router>
+					<div className="min-h-screen bg-concrete-100">
+						<Header />
+						<main className="container mx-auto px-4 py-8">
+							<Routes>
+								<Route path="/" element={<Home />} />
+								<Route path="/create" element={
+									<ProtectedRoute>
+										<CreatePost />
+									</ProtectedRoute>
+								} />
+								<Route path="/post/:id" element={<PostDetail />} />
+								<Route path="/post/:id/edit" element={
+									<ProtectedRoute>
+										<EditPost />
+									</ProtectedRoute>
+								} />
+								<Route path="/profile" element={
+									<ProtectedRoute>
+										<Profile />
+									</ProtectedRoute>
+								} />
+							</Routes>
+						</main>
+						<Toaster
+							position="bottom-right"
+							toastOptions={{
+								duration: 3000,
+								style: {
+									background: '#212529',
+									color: '#fff',
+									border: '3px solid #000',
+									borderRadius: '0',
+									fontWeight: 'bold',
+								}
+							}}
+						/>
+					</div>
+				</Router>
+			</AuthProvider>
+		</QueryClientProvider>
 	)
 }
 
