@@ -13,7 +13,7 @@ const Home = () => {
 	const searchQuery = searchParams.get('search') || ''
 
 	// Fetch posts based on sort and search
-	const { data: posts, isLoading, error } = useQuery({
+const { data: posts, isLoading, error } = useQuery({
 		queryKey: ['posts', sortBy, searchQuery],
 		queryFn: async () => {
 			try {
@@ -26,8 +26,7 @@ const Home = () => {
 					if (error) throw error
 					return data
 				}
-			} catch (error) {
-				console.warn('Posts query failed (probably no database setup yet):', error)
+			} catch (error) { // eslint-disable-line no-unused-vars
 				return [] // Return empty array instead of throwing
 			}
 		},
@@ -35,31 +34,20 @@ const Home = () => {
 	})
 
 	// Fetch upcoming movies from TMDB
-	const { data: upcomingMovies, isLoading: moviesLoading, error: moviesError } = useQuery({
-		queryKey: ['upcoming-movies'],
-		queryFn: async () => {
-			console.log('🎬 Fetching upcoming movies...')
-			try {
-				const movies = await getUpcomingMovies()
-				console.log('🎬 Upcoming movies result:', movies)
-				return movies
-			} catch (error) {
-				console.error('🎬 Upcoming movies error:', error)
-				throw error
-			}
-		},
-		staleTime: 1000 * 60 * 30, // Cache for 30 minutes
-		enabled: !searchQuery, // Only fetch when not searching
-		retry: 3,
-		retryDelay: 1000
-	})
+const { data: upcomingMovies, error: moviesError } = useQuery({
+	queryKey: ['upcoming-movies'],
+	queryFn: getUpcomingMovies,
+	staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+	enabled: !searchQuery, // Only fetch when not searching
+	retry: 3,
+	retryDelay: 1000
+})
 
 	useEffect(() => {
 		if (error) {
 			toast.error('Failed to load posts')
 		}
 		if (moviesError) {
-			console.error('🎬 Movies error:', moviesError)
 			toast.error('Failed to load upcoming movies')
 		}
 	}, [error, moviesError])
@@ -68,15 +56,15 @@ const Home = () => {
 		setSortBy(newSort)
 	}
 
-	if (isLoading && !posts) {
-		return (
-			<div className="flex items-center justify-center min-h-64">
-				<div className="bg-theater-red text-white px-12 py-8 border-5 border-black font-brutal text-3xl shadow-brutal">
-					LOADING HYPE...
-				</div>
+if (isLoading) {
+	return (
+		<div className="flex items-center justify-center min-h-64">
+			<div className="bg-theater-red text-white px-12 py-8 border-5 border-black font-brutal text-3xl shadow-brutal">
+				LOADING HYPE...
 			</div>
-		)
-	}
+		</div>
+	)
+}
 
 	return (
 		<div className="max-w-4xl mx-auto">
@@ -130,10 +118,6 @@ const Home = () => {
 			</div>
 
 			{/* Posts Section */}
-			{(() => {
-				console.log('🔍 Posts debug:', { posts, postsLength: posts?.length, postsType: typeof posts, isLoading });
-				return null;
-			})()}
 			{posts && Array.isArray(posts) && posts.length > 0 ? (
 				<div className="space-y-6">
 					{posts.map((post) => (
@@ -179,23 +163,13 @@ const Home = () => {
 									</p>
 								</div>
 
-								{(() => {
-									console.log('🎬 Debug - upcomingMovies:', upcomingMovies, 'moviesLoading:', moviesLoading, 'moviesError:', moviesError);
-									console.log('🎬 Debug - upcomingMovies length:', upcomingMovies?.length);
-									console.log('🎬 Debug - Will render movies?', !moviesLoading && upcomingMovies && upcomingMovies.length > 0);
-									console.log('🎬 Debug - moviesLoading type:', typeof moviesLoading, moviesLoading);
-									console.log('🎬 Debug - upcomingMovies type:', typeof upcomingMovies, Array.isArray(upcomingMovies));
-									return null;
-								})()}
 
-								{/* FORCE RENDER FOR DEBUGGING */}
-								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" style={{ backgroundColor: 'red', minHeight: '200px', border: '5px solid black' }}>
-									<div style={{ backgroundColor: 'blue', color: 'yellow', padding: '20px', fontSize: '16px', fontWeight: 'bold' }}>
-										DEBUG: Force render - moviesLoading: {String(moviesLoading)}, movies: {upcomingMovies ? upcomingMovies.length : 'null/undefined'}, error: {String(!!moviesError)}
-									</div>
-									{upcomingMovies && upcomingMovies.map && upcomingMovies.slice(0, 3).map((movie) => (
-										<div key={movie.id} style={{ backgroundColor: 'green', color: 'yellow', padding: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-											{movie.title}
+							   {/* Upcoming Movies Grid */}
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+									{upcomingMovies && Array.isArray(upcomingMovies.results) && upcomingMovies.results.map((movie) => (
+										<div key={movie.id} className="bg-concrete-200 border-3 border-black p-4 rounded shadow-brutal flex flex-col items-center">
+											<span className="font-brutal text-lg text-concrete-900 mb-2">{movie.title}</span>
+											<span className="font-mono text-concrete-700 text-sm">Release: {movie.release_date}</span>
 										</div>
 									))}
 								</div>

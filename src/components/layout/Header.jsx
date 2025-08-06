@@ -15,23 +15,16 @@ const Header = () => {
     const [searchQuery, setSearchQuery] = useState("");
 
     const handleSignOut = async () => {
-        console.log('🔴 Logout button clicked!')
         try {
-            console.log('🔴 Calling signOut function...')
             const { error } = await signOut();
-            console.log('🔴 SignOut result:', { error })
-            
             if (error) {
-                console.error('🔴 SignOut error:', error)
                 toast.error("Error signing out");
             } else {
-                console.log('🔴 SignOut successful, forcing page reload...')
                 toast.success("Signed out successfully");
                 // Force a hard refresh to clear everything
                 window.location.href = '/';
             }
-        } catch (err) {
-            console.error('🔴 Logout catch error:', err)
+        } catch (err) { // eslint-disable-line no-unused-vars
             toast.error("Something went wrong during logout");
         }
     };
