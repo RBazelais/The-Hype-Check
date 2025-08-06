@@ -1,12 +1,11 @@
 // src/pages/Profile.jsx
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { User, Calendar, Film, MessageCircle, Edit3, Eye } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useAuth } from '../hooks/useAuth'
 import { supabaseHelpers } from '../utils/supabase'
-import toast from 'react-hot-toast'
 
 const Profile = () => {
 	const { user, profile } = useAuth()

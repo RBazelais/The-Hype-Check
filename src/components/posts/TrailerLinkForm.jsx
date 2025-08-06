@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Plus, AlertTriangle, ExternalLink } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../../hooks/useAuth'
 import { supabaseHelpers } from '../../utils/supabase'
 import { checkForDuplicates } from '../../utils/duplicateDetection'
 import toast from 'react-hot-toast'
@@ -78,6 +78,27 @@ const TrailerLinkForm = ({ onPostCreated }) => {
 		return true
 	}
 
+	// Helper function to get video ID from URL for preview
+	const getVideoId = (url) => {
+		if (!url) return null
+		
+		// YouTube video ID extraction
+		const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
+		if (youtubeMatch) {
+			return { platform: 'youtube', id: youtubeMatch[1] }
+		}
+		
+		// Vimeo video ID extraction
+		const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+		if (vimeoMatch) {
+			return { platform: 'vimeo', id: vimeoMatch[1] }
+		}
+		
+		return null
+	}
+
+	const videoInfo = getVideoId(trailerUrl)
+
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 			{/* Trailer URL */}
@@ -102,6 +123,40 @@ const TrailerLinkForm = ({ onPostCreated }) => {
 				<p className="mt-2 text-xs font-mono text-concrete-600">
 					YouTube or Vimeo links only
 				</p>
+				
+				{/* Trailer Preview */}
+				{videoInfo && (
+					<div className="mt-3 p-3 bg-concrete-100 border-2 border-concrete-400">
+						<div className="flex items-center gap-2 mb-2">
+							<ExternalLink size={16} className="text-theater-red" />
+							<span className="font-mono font-bold text-sm text-concrete-800">
+								TRAILER PREVIEW
+							</span>
+						</div>
+						{videoInfo.platform === 'youtube' ? (
+							<div className="aspect-video bg-black rounded border border-concrete-300">
+								<img
+									src={`https://img.youtube.com/vi/${videoInfo.id}/maxresdefault.jpg`}
+									alt="YouTube thumbnail"
+									className="w-full h-full object-cover rounded"
+									onError={(e) => {
+										e.target.src = `https://img.youtube.com/vi/${videoInfo.id}/hqdefault.jpg`
+									}}
+								/>
+							</div>
+						) : (
+							<div className="aspect-video bg-concrete-200 rounded border border-concrete-300 flex items-center justify-center">
+								<div className="text-center">
+									<div className="text-2xl mb-2">🎬</div>
+									<p className="font-mono text-sm text-concrete-600">Vimeo Video</p>
+								</div>
+							</div>
+						)}
+						<p className="mt-2 text-xs font-mono text-concrete-600">
+							Platform: {videoInfo.platform.toUpperCase()} • ID: {videoInfo.id}
+						</p>
+					</div>
+				)}
 			</div>
 
 			{/* Movie Title */}

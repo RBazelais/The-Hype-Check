@@ -3,6 +3,11 @@ import axios from 'axios'
 const TMDB_BASE_URL = import.meta.env.VITE_TMDB_BASE_URL
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY
 
+console.log('🎬 TMDB API Configuration:')
+console.log('🎬 Base URL:', TMDB_BASE_URL)
+console.log('🎬 API Key present:', !!TMDB_API_KEY)
+console.log('🎬 API Key type:', TMDB_API_KEY ? (TMDB_API_KEY.startsWith('eyJ') ? 'JWT Bearer' : 'Regular API Key') : 'Missing')
+
 // Check if API key is a JWT token (Bearer) or regular API key
 const isJWTToken = TMDB_API_KEY && TMDB_API_KEY.startsWith('eyJ')
 
@@ -26,6 +31,22 @@ export const searchMovies = async (query) => {
 			params: {
 				query: query,
 				include_adult: false,
+				language: 'en-US',
+				page: 1
+			}
+		})
+		
+		return response.data.results || []
+	} catch (error) {
+		console.error('TMDB API error:', error)
+		throw error
+	}
+}
+
+export const getUpcomingMovies = async () => {
+	try {
+		const response = await tmdbApi.get('/movie/upcoming', {
+			params: {
 				language: 'en-US',
 				page: 1
 			}

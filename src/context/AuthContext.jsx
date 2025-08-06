@@ -1,16 +1,9 @@
+
 // src/context/AuthContext.jsx
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useState, useEffect } from 'react'
 import { supabase } from '../utils/supabase'
 
-const AuthContext = createContext({})
-
-export const useAuth = () => {
-	const context = useContext(AuthContext)
-	if (!context) {
-		throw new Error('useAuth must be used within AuthProvider')
-	}
-	return context
-}
+export const AuthContext = createContext({})
 
 export const AuthProvider = ({ children }) => {
 	const [user, setUser] = useState(null)
@@ -19,25 +12,31 @@ export const AuthProvider = ({ children }) => {
 
 	useEffect(() => {
 		// Get initial session
-		supabase.auth.getSession().then(({ data: { session } }) => {
+		const getInitialSession = async () => {
+			const { data: { session } } = await supabase.auth.getSession()
 			setUser(session?.user ?? null)
+			
 			if (session?.user) {
-				fetchProfile(session.user.id)
-			} else {
-				setLoading(false)
+				await fetchProfile(session.user.id)
 			}
-		})
+			
+			setLoading(false)
+		}
+
+		getInitialSession()
 
 		// Listen for auth changes
 		const { data: { subscription } } = supabase.auth.onAuthStateChange(
 			async (event, session) => {
 				setUser(session?.user ?? null)
+				
 				if (session?.user) {
 					await fetchProfile(session.user.id)
 				} else {
 					setProfile(null)
-					setLoading(false)
 				}
+				
+				setLoading(false)
 			}
 		)
 
@@ -52,13 +51,23 @@ export const AuthProvider = ({ children }) => {
 				.eq('id', userId)
 				.single()
 
-			if (error) throw error
+			if (error && error.code !== 'PGRST116') {
+				console.error('Error fetching profile:', error)
+				return
+			}
+
 			setProfile(data)
 		} catch (error) {
 			console.error('Error fetching profile:', error)
-		} finally {
-			setLoading(false)
 		}
+	}
+
+	const signIn = async (email, password) => {
+		const { data, error } = await supabase.auth.signInWithPassword({
+			email,
+			password
+		})
+		return { data, error }
 	}
 
 	const signUp = async (email, password, displayName) => {
@@ -74,14 +83,6 @@ export const AuthProvider = ({ children }) => {
 		return { data, error }
 	}
 
-	const signIn = async (email, password) => {
-		const { data, error } = await supabase.auth.signInWithPassword({
-			email,
-			password
-		})
-		return { data, error }
-	}
-
 	const signOut = async () => {
 		const { error } = await supabase.auth.signOut()
 		return { error }
@@ -92,14 +93,13 @@ export const AuthProvider = ({ children }) => {
 
 		const { data, error } = await supabase
 			.from('profiles')
-			.update(updates)
-			.eq('id', user.id)
+			.upsert({ id: user.id, ...updates })
 			.select()
-			.single()
 
-		if (!error) {
-			setProfile(data)
+		if (!error && data) {
+			setProfile(data[0])
 		}
+
 		return { data, error }
 	}
 
@@ -107,10 +107,11 @@ export const AuthProvider = ({ children }) => {
 		user,
 		profile,
 		loading,
-		signUp,
 		signIn,
+		signUp,
 		signOut,
-		updateProfile
+		updateProfile,
+		fetchProfile
 	}
 
 	return (

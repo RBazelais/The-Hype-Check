@@ -4,7 +4,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save, X } from 'lucide-react'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useAuth } from '../hooks/useAuth'
 import { supabaseHelpers } from '../utils/supabase'
 import toast from 'react-hot-toast'
 
@@ -19,7 +19,6 @@ const EditPost = () => {
 		register,
 		handleSubmit,
 		setValue,
-		watch,
 		formState: { errors }
 	} = useForm()
 

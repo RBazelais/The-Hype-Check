@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Plus, User, LogOut, LogIn } from "lucide-react";
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useAuth } from '../../hooks/useAuth';
 import LoginForm from "../auth/LoginForm.jsx";
 import SignupForm from "../auth/SignUpForm.jsx";
 import toast from "react-hot-toast";
@@ -15,12 +15,24 @@ const Header = () => {
     const [searchQuery, setSearchQuery] = useState("");
 
     const handleSignOut = async () => {
-        const { error } = await signOut();
-        if (error) {
-            toast.error("Error signing out");
-        } else {
-            toast.success("Signed out successfully");
-            navigate("/");
+        console.log('🔴 Logout button clicked!')
+        try {
+            console.log('🔴 Calling signOut function...')
+            const { error } = await signOut();
+            console.log('🔴 SignOut result:', { error })
+            
+            if (error) {
+                console.error('🔴 SignOut error:', error)
+                toast.error("Error signing out");
+            } else {
+                console.log('🔴 SignOut successful, forcing page reload...')
+                toast.success("Signed out successfully");
+                // Force a hard refresh to clear everything
+                window.location.href = '/';
+            }
+        } catch (err) {
+            console.error('🔴 Logout catch error:', err)
+            toast.error("Something went wrong during logout");
         }
     };
 

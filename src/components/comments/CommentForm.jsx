@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { MessageCircle, AlertCircle } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../../hooks/useAuth'
 import { supabaseHelpers } from '../../utils/supabase'
 import toast from 'react-hot-toast'
 

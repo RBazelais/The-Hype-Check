@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../../hooks/useAuth'
 import toast from 'react-hot-toast'
 
 const LoginForm = ({ onSuccess }) => {

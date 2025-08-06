@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Search, Plus, Film, ExternalLink, AlertTriangle } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../../hooks/useAuth'
 import { supabaseHelpers } from '../../utils/supabase.js'
 import { searchMovies } from '../../utils/tmdbApi.js'
 import { checkForDuplicates } from '../../utils/duplicateDetection.js'

@@ -1,6 +1,6 @@
 // src/components/comments/CommentSection.jsx
 import { useState } from 'react'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { useAuth } from '../../hooks/useAuth'
 import CommentForm from './CommentForm'
 import Comment from './Comment'
 

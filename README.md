@@ -2,7 +2,7 @@
 
 Submitted by: **Rachel Bazelais**
 
-This web app: **The Hype Check is a movie trailer discussion platform built with React and Supabase. Users create posts about trailers they've watched, share their initial reactions, and engage in spoiler-protected discussions.git init**
+This web app: **The Hype Check is a movie trailer discussion platform built with React and Supabase. Users create posts about trailers they've watched, share their initial reactions, and engage in spoiler-protected discussions**
 
 Time spent: **56** hours spent in total
 
