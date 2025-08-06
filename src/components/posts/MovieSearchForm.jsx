@@ -20,26 +20,43 @@ const MovieSearchForm = ({ onPostCreated }) => {
 		register,
 		handleSubmit,
 		setValue,
-		watch,
 		formState: { errors }
 	} = useForm()
 
-	const searchQuery = watch('searchQuery')
+	// Remove unused searchQuery variable since we handle search in onChange
 
 	const handleMovieSearch = async (query) => {
 		if (!query || query.length < 2) {
+			console.log('🚫 Search query too short or empty:', { query, length: query?.length })
 			setSearchResults([])
 			return
 		}
 
+		console.log('🔎 Starting movie search for:', query)
 		setIsSearching(true)
 		try {
 			const results = await searchMovies(query)
-			setSearchResults(results.slice(0, 5)) // Show top 5 results
+			console.log('✅ Search results received in component:', {
+				results,
+				resultsType: typeof results,
+				isArray: Array.isArray(results),
+				length: results?.length
+			})
+			
+			if (results && Array.isArray(results) && results.length > 0) {
+				const topResults = results.slice(0, 5)
+				console.log('🎬 Setting top 5 search results:', topResults)
+				setSearchResults(topResults)
+			} else {
+				console.log('❌ No valid results found, setting empty array')
+				setSearchResults([])
+			}
 		} catch (error) {
+			console.error('💥 Movie search error in component:', error)
 			toast.error('Failed to search movies')
-			console.error('Movie search error:', error)
+			setSearchResults([])
 		} finally {
+			console.log('🏁 Search completed, setting isSearching to false')
 			setIsSearching(false)
 		}
 	}
@@ -61,6 +78,16 @@ const MovieSearchForm = ({ onPostCreated }) => {
 	const onSubmit = async (data) => {
 		if (!selectedMovie) {
 			toast.error('Please select a movie from search results')
+			return
+		}
+
+		// Check if user exists (for testing purposes)
+		if (!user) {
+			toast.success('Movie search is working! (Test mode - no user logged in)')
+			console.log('Would create post with data:', {
+				movie: selectedMovie,
+				formData: data
+			})
 			return
 		}
 
@@ -106,9 +133,9 @@ const MovieSearchForm = ({ onPostCreated }) => {
 					<input
 						type="text"
 						{...register('searchQuery', {
-							required: 'Please search and select a movie',
-							onChange: (e) => handleMovieSearch(e.target.value)
+							required: 'Please search and select a movie'
 						})}
+						onChange={(e) => handleMovieSearch(e.target.value)}
 						className="w-full px-4 py-3 pr-12 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all"
 						placeholder="Start typing a movie title..."
 					/>
@@ -270,7 +297,7 @@ const MovieSearchForm = ({ onPostCreated }) => {
 				) : (
 					<>
 						<Plus size={20} />
-						CREATE HYPE CHECK
+						{user ? 'CREATE HYPE CHECK' : 'TEST MOVIE SEARCH'}
 					</>
 				)}
 			</button>

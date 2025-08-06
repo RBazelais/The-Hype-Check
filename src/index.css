@@ -1,5 +1,6 @@
 /* src/index.css */
 @import "tailwindcss";
+@import './styles/brutalist-components.css';
 
 /* Neo-brutalist custom styles */
 @layer base {

@@ -40,7 +40,7 @@ const Home = () => {
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center min-h-64">
-				<div className="bg-concrete-900 text-concrete-100 px-8 py-4 border-5 border-black font-brutal text-xl">
+				<div className="bg-theater-red text-white px-12 py-8 border-5 border-black font-brutal text-3xl shadow-brutal">
 					LOADING HYPE...
 				</div>
 			</div>
@@ -51,47 +51,49 @@ const Home = () => {
 		<div className="max-w-4xl mx-auto">
 			{/* Header Section */}
 			<div className="mb-8">
-				<h1 className="font-brutal text-4xl text-concrete-900 mb-2">
-					{searchQuery ? `SEARCH: "${searchQuery}"` : 'LATEST HYPE CHECKS'}
-				</h1>
-				<p className="font-mono text-concrete-600">
-					{searchQuery 
-						? `Found ${posts?.length || 0} discussions`
-						: 'Movie trailer discussions from the community'
-					}
-				</p>
+				<div className="bg-theater-gold text-black p-6 border-5 border-black shadow-brutal">
+					<h1 className="font-brutal text-4xl mb-2">
+						{searchQuery ? `SEARCH: "${searchQuery}"` : 'LATEST HYPE CHECKS'}
+					</h1>
+					<p className="font-mono text-lg">
+						{searchQuery 
+							? `Found ${posts?.length || 0} discussions`
+							: 'Movie trailer discussions from the community'
+						}
+					</p>
+				</div>
 			</div>
 
 			{/* Controls Section */}
-			<div className="flex flex-col sm:flex-row gap-4 mb-8 p-4 bg-concrete-200 border-3 border-black">
+			<div className="flex flex-col sm:flex-row gap-4 mb-8 p-6 bg-concrete-800 border-5 border-black shadow-brutal">
 				<div className="flex items-center gap-2">
-					<ArrowUpDown size={20} className="text-concrete-700" />
-					<span className="font-mono font-bold text-concrete-900">SORT BY:</span>
+					<ArrowUpDown size={20} className="text-theater-gold" />
+					<span className="font-mono font-bold text-theater-gold text-lg">SORT BY:</span>
 				</div>
 				
-				<div className="flex gap-2">
+				<div className="flex gap-3">
 					<button
 						onClick={() => handleSortChange('created_at')}
-						className={`px-4 py-2 font-mono font-bold border-3 border-black transition-all ${
+						className={`px-6 py-3 font-mono font-bold border-5 border-black transition-all flex items-center gap-2 ${
 							sortBy === 'created_at'
-								? 'bg-theater-gold text-black shadow-brutal-sm'
-								: 'bg-concrete-100 text-concrete-700 hover:bg-concrete-300'
+								? 'bg-street-yellow text-black shadow-brutal'
+								: 'bg-concrete-300 text-black hover:bg-street-yellow hover:text-black shadow-brutal-sm hover:shadow-brutal'
 						}`}
 					>
-						<Clock size={16} className="inline mr-2" />
-						NEWEST
+						<Clock size={16} className="text-black" />
+						<span>NEWEST</span>
 					</button>
 					
 					<button
 						onClick={() => handleSortChange('upvotes')}
-						className={`px-4 py-2 font-mono font-bold border-3 border-black transition-all ${
+						className={`px-6 py-3 font-mono font-bold border-5 border-black transition-all flex items-center gap-2 ${
 							sortBy === 'upvotes'
-								? 'bg-theater-gold text-black shadow-brutal-sm'
-								: 'bg-concrete-100 text-concrete-700 hover:bg-concrete-300'
+								? 'bg-street-yellow text-black shadow-brutal'
+								: 'bg-concrete-300 text-black hover:bg-street-yellow hover:text-black shadow-brutal-sm hover:shadow-brutal'
 						}`}
 					>
-						<ThumbsUp size={16} className="inline mr-2" />
-						MOST HYPED
+						<ThumbsUp size={16} className="text-black" />
+						<span>MOST HYPED</span>
 					</button>
 				</div>
 			</div>
@@ -105,32 +107,32 @@ const Home = () => {
 				</div>
 			) : (
 				<div className="text-center py-12">
-					<div className="bg-concrete-300 border-3 border-black p-8 inline-block">
+					<div className="bg-theater-red text-white border-5 border-black p-12 inline-block shadow-brutal">
 						{searchQuery ? (
-							<>
-								<Search size={48} className="mx-auto mb-4 text-concrete-600" />
-								<h3 className="font-brutal text-xl text-concrete-800 mb-2">
+							<div className="text-center">
+								<Search size={64} className="mx-auto mb-6 text-street-yellow block" />
+								<h3 className="font-brutal text-3xl mb-4">
 									NO RESULTS FOUND
 								</h3>
-								<p className="font-mono text-concrete-600">
+								<p className="font-mono text-xl text-concrete-200">
 									Try searching for a different movie title
 								</p>
-							</>
+							</div>
 						) : (
-							<>
-								<h3 className="font-brutal text-xl text-concrete-800 mb-2">
+							<div className="text-center">
+								<h3 className="font-brutal text-3xl mb-4">
 									NO HYPE CHECKS YET
 								</h3>
-								<p className="font-mono text-concrete-600 mb-4">
+								<p className="font-mono text-xl text-concrete-200 mb-6">
 									Be the first to share a trailer reaction!
 								</p>
 								<a
 									href="/create"
-									className="inline-block px-6 py-3 bg-theater-red hover:bg-theater-gold text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all"
+									className="inline-block px-8 py-4 bg-street-yellow hover:bg-street-orange text-black font-mono font-bold text-lg border-5 border-black shadow-brutal hover:shadow-none transition-all"
 								>
 									CREATE FIRST POST
 								</a>
-							</>
+							</div>
 						)}
 					</div>
 				</div>

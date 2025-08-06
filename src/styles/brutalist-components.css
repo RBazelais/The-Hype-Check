@@ -1,0 +1,271 @@
+/* src/styles/brutalist-components.css */
+
+/* Additional brutalist utility classes beyond what Tailwind provides */
+
+/* Text selection styling */
+::selection {
+	background: #fbbf24; /* theater-gold */
+	color: #000;
+}
+
+::-moz-selection {
+	background: #fbbf24; /* theater-gold */
+	color: #000;
+}
+
+/* Custom scrollbar for brutalist feel */
+::-webkit-scrollbar {
+	width: 12px;
+	background: #e9ecef; /* concrete-100 */
+}
+
+::-webkit-scrollbar-track {
+	background: #e9ecef; /* concrete-100 */
+	border: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #343a40; /* concrete-700 */
+	border: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #212529; /* concrete-800 */
+}
+
+/* Focus states for accessibility with brutalist styling */
+input:focus,
+textarea:focus,
+button:focus,
+select:focus {
+	outline: 3px solid #dc2626 !important; /* theater-red */
+	outline-offset: 2px;
+}
+
+/* Custom button hover animations */
+.btn-brutal-animate {
+	transition: all 0.1s ease;
+	position: relative;
+}
+
+.btn-brutal-animate:hover {
+	transform: translate(-2px, -2px);
+}
+
+.btn-brutal-animate:active {
+	transform: translate(0px, 0px);
+}
+
+/* Loading spinner for brutalist theme */
+.brutal-spinner {
+	border: 4px solid #343a40; /* concrete-700 */
+	border-top: 4px solid #fbbf24; /* theater-gold */
+	border-radius: 0; /* No rounded corners for brutalism */
+	width: 40px;
+	height: 40px;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
+/* Brutalist form styling */
+.brutal-form-group {
+	margin-bottom: 1.5rem;
+}
+
+.brutal-label {
+	display: block;
+	font-family: 'Courier New', monospace;
+	font-weight: bold;
+	font-size: 0.875rem;
+	color: #212529; /* concrete-800 */
+	margin-bottom: 0.5rem;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.brutal-input {
+	width: 100%;
+	padding: 0.75rem 1rem;
+	background: #f8f9fa; /* concrete-50 */
+	border: 3px solid #000;
+	font-family: 'Courier New', monospace;
+	font-size: 0.875rem;
+	transition: all 0.2s ease;
+}
+
+.brutal-input:focus {
+	background: #fff;
+	box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+}
+
+.brutal-input::placeholder {
+	color: #6c757d; /* concrete-500 */
+	font-style: italic;
+}
+
+/* Error states */
+.brutal-input-error {
+	border-color: #dc2626; /* theater-red */
+}
+
+.brutal-error-text {
+	color: #dc2626; /* theater-red */
+	font-family: 'Courier New', monospace;
+	font-size: 0.75rem;
+	margin-top: 0.25rem;
+	font-weight: bold;
+}
+
+/* Success states */
+.brutal-success {
+	border-color: #16a34a; /* green-600 */
+	background: #dcfce7; /* green-100 */
+}
+
+/* Warning states */
+.brutal-warning {
+	border-color: #ea580c; /* street-orange */
+	background: #fed7aa; /* orange-100 */
+}
+
+/* Card hover effects */
+.brutal-card {
+	transition: all 0.2s ease;
+}
+
+.brutal-card:hover {
+	transform: translate(-2px, -2px);
+}
+
+/* Typography utilities */
+.brutal-text-shadow {
+	text-shadow: 2px 2px 0px #000;
+}
+
+.brutal-text-outline {
+	-webkit-text-stroke: 2px #000;
+	color: transparent;
+}
+
+/* Link styling */
+.brutal-link {
+	color: #dc2626; /* theater-red */
+	font-family: 'Courier New', monospace;
+	font-weight: bold;
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	transition: all 0.2s ease;
+}
+
+.brutal-link:hover {
+	color: #fbbf24; /* theater-gold */
+	text-decoration-color: #fbbf24;
+}
+
+/* Modal/overlay styling */
+.brutal-overlay {
+	background: rgba(0, 0, 0, 0.8);
+	backdrop-filter: none; /* No blur for brutalism */
+}
+
+.brutal-modal {
+	background: #f8f9fa; /* concrete-50 */
+	border: 5px solid #000;
+	box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+}
+
+/* Table styling */
+.brutal-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+	border: 3px solid #000;
+}
+
+.brutal-table th,
+.brutal-table td {
+	padding: 0.75rem 1rem;
+	border-bottom: 2px solid #000;
+	border-right: 2px solid #000;
+	font-family: 'Courier New', monospace;
+}
+
+.brutal-table th {
+	background: #343a40; /* concrete-700 */
+	color: #fbbf24; /* theater-gold */
+	font-weight: bold;
+	text-transform: uppercase;
+}
+
+.brutal-table tbody tr:hover {
+	background: #e9ecef; /* concrete-100 */
+}
+
+/* Badge styling */
+.brutal-badge {
+	display: inline-block;
+	padding: 0.25rem 0.5rem;
+	background: #fbbf24; /* theater-gold */
+	color: #000;
+	font-family: 'Courier New', monospace;
+	font-size: 0.75rem;
+	font-weight: bold;
+	border: 2px solid #000;
+	text-transform: uppercase;
+}
+
+.brutal-badge-red {
+	background: #dc2626; /* theater-red */
+	color: #fff;
+}
+
+.brutal-badge-yellow {
+	background: #eab308; /* street-yellow */
+	color: #000;
+}
+
+/* Progress bar */
+.brutal-progress {
+	width: 100%;
+	height: 20px;
+	background: #e9ecef; /* concrete-100 */
+	border: 3px solid #000;
+	position: relative;
+	overflow: hidden;
+}
+
+.brutal-progress-fill {
+	height: 100%;
+	background: #fbbf24; /* theater-gold */
+	border-right: 2px solid #000;
+	transition: width 0.3s ease;
+}
+
+/* Notification/Toast styling enhancements */
+.brutal-toast {
+	border: 3px solid #000 !important;
+	border-radius: 0 !important;
+	font-family: 'Courier New', monospace !important;
+	font-weight: bold !important;
+}
+
+/* Print styles for brutalism */
+@media print {
+	* {
+		color: #000 !important;
+		background: #fff !important;
+		box-shadow: none !important;
+		text-shadow: none !important;
+	}
+	
+	.brutal-card,
+	.brutal-input,
+	.brutal-modal {
+		border: 2px solid #000 !important;
+		box-shadow: none !important;
+	}
+}

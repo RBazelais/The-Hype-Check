@@ -3,11 +3,21 @@ import axios from 'axios'
 const TMDB_BASE_URL = import.meta.env.VITE_TMDB_BASE_URL
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY
 
+// Check if API key is a JWT token (Bearer) or regular API key
+const isJWTToken = TMDB_API_KEY && TMDB_API_KEY.startsWith('eyJ')
+
 const tmdbApi = axios.create({
-	baseURL: TMDB_BASE_URL,
-	params: {
-		api_key: TMDB_API_KEY
-	}
+	baseURL: TMDB_BASE_URL || 'https://api.themoviedb.org/3',
+	...(isJWTToken ? {
+		headers: {
+			'Authorization': `Bearer ${TMDB_API_KEY}`,
+			'Content-Type': 'application/json'
+		}
+	} : {
+		params: {
+			api_key: TMDB_API_KEY
+		}
+	})
 })
 
 export const searchMovies = async (query) => {
@@ -20,7 +30,8 @@ export const searchMovies = async (query) => {
 				page: 1
 			}
 		})
-		return response.data.results
+		
+		return response.data.results || []
 	} catch (error) {
 		console.error('TMDB API error:', error)
 		throw error

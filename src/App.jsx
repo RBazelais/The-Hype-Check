@@ -8,6 +8,7 @@ import CreatePost from './pages/CreatePost'
 import PostDetail from './pages/PostDetail'
 import EditPost from './pages/EditPost'
 import Profile from './pages/Profile'
+import TestMovieSearch from './pages/TestMovieSearch'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import './App.css'
 
@@ -30,6 +31,7 @@ function App() {
 						<main className="container mx-auto px-4 py-8">
 							<Routes>
 								<Route path="/" element={<Home />} />
+								<Route path="/test-search" element={<TestMovieSearch />} />
 								<Route path="/create" element={
 									<ProtectedRoute>
 										<CreatePost />
