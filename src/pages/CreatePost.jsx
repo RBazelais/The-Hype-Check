@@ -1,101 +1,94 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
-import toast from 'react-hot-toast'
+import { Search, Link, Film } from 'lucide-react'
+import MovieSearchForm from '../components/posts/MovieSearchForm'
+import TrailerLinkForm from '../components/posts/TrailerLinkForm'
 
 const CreatePost = () => {
+	const [activeTab, setActiveTab] = useState('search') // 'search' or 'manual'
 	const navigate = useNavigate()
-	const { user } = useAuth()
-	const [title, setTitle] = useState('')
-	const [content, setContent] = useState('')
-	const [rating, setRating] = useState(5)
-	const [isLoading, setIsLoading] = useState(false)
 
-	const handleSubmit = async (e) => {
-		e.preventDefault()
-		
-		if (!title.trim() || !content.trim()) {
-			toast.error('Please fill in all fields')
-			return
-		}
-
-		setIsLoading(true)
-		try {
-			// TODO: Add Supabase post creation logic here
-			toast.success('Post created successfully!')
-			navigate('/')
-		} catch (error) {
-			console.error('Error creating post:', error)
-			toast.error('Failed to create post')
-		} finally {
-			setIsLoading(false)
-		}
-	}
-
-	if (!user) {
-		return (
-			<div className="text-center py-12">
-				<p className="font-mono text-concrete-800">Please log in to create a post.</p>
-			</div>
-		)
+	const handlePostCreated = (postId) => {
+		navigate(`/post/${postId}`)
 	}
 
 	return (
 		<div className="max-w-2xl mx-auto">
-			<div className="bg-street-yellow text-black p-6 border-5 border-black mb-6">
-				<h1 className="font-brutal text-3xl">CREATE NEW POST</h1>
-				<p className="font-mono">Share your thoughts on the latest entertainment!</p>
+			{/* Header */}
+			<div className="mb-8">
+				<h1 className="font-brutal text-4xl text-concrete-900 mb-2">
+					CREATE HYPE CHECK
+				</h1>
+				<p className="font-mono text-concrete-600">
+					Share your reaction to a movie trailer
+				</p>
 			</div>
 
-			<form onSubmit={handleSubmit} className="space-y-6">
-				<div>
-					<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
-						TITLE
-					</label>
-					<input
-						type="text"
-						value={title}
-						onChange={(e) => setTitle(e.target.value)}
-						className="w-full px-4 py-3 bg-white border-3 border-black font-mono focus:outline-none focus:shadow-brutal-sm transition-all"
-						placeholder="What are you reviewing?"
-					/>
+			{/* Tab Selection */}
+			<div className="mb-8">
+				<div className="flex border-3 border-black bg-concrete-200">
+					<button
+						onClick={() => setActiveTab('search')}
+						className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 font-mono font-bold transition-all ${
+							activeTab === 'search'
+								? 'bg-theater-gold text-black border-r-3 border-black'
+								: 'bg-concrete-100 text-concrete-700 hover:bg-concrete-200 border-r-3 border-black'
+						}`}
+					>
+						<Search size={20} />
+						SEARCH FOR MOVIE
+					</button>
+					<button
+						onClick={() => setActiveTab('manual')}
+						className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 font-mono font-bold transition-all ${
+							activeTab === 'manual'
+								? 'bg-theater-gold text-black'
+								: 'bg-concrete-100 text-concrete-700 hover:bg-concrete-200'
+						}`}
+					>
+						<Link size={20} />
+						ADD TRAILER LINK
+					</button>
 				</div>
 
-				<div>
-					<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
-						RATING (1-10)
-					</label>
-					<input
-						type="number"
-						min="1"
-						max="10"
-						value={rating}
-						onChange={(e) => setRating(parseInt(e.target.value))}
-						className="w-full px-4 py-3 bg-white border-3 border-black font-mono focus:outline-none focus:shadow-brutal-sm transition-all"
-					/>
+				{/* Tab Descriptions */}
+				<div className="mt-4 p-4 bg-concrete-100 border-3 border-black">
+					{activeTab === 'search' ? (
+						<div className="flex items-start gap-3">
+							<Film size={20} className="text-theater-red mt-1 flex-shrink-0" />
+							<div>
+								<h3 className="font-mono font-bold text-concrete-900 mb-1">
+									Movie Database Search
+								</h3>
+								<p className="font-mono text-sm text-concrete-600">
+									Search our movie database, select a film, and we'll check if someone already started a discussion about it.
+								</p>
+							</div>
+						</div>
+					) : (
+						<div className="flex items-start gap-3">
+							<Link size={20} className="text-theater-red mt-1 flex-shrink-0" />
+							<div>
+								<h3 className="font-mono font-bold text-concrete-900 mb-1">
+									Manual Trailer Entry
+								</h3>
+								<p className="font-mono text-sm text-concrete-600">
+									Add a YouTube/Vimeo trailer link directly. Great for indie films or international movies that might not be in our database.
+								</p>
+							</div>
+						</div>
+					)}
 				</div>
+			</div>
 
-				<div>
-					<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
-						YOUR REVIEW
-					</label>
-					<textarea
-						value={content}
-						onChange={(e) => setContent(e.target.value)}
-						rows={6}
-						className="w-full px-4 py-3 bg-white border-3 border-black font-mono focus:outline-none focus:shadow-brutal-sm transition-all resize-none"
-						placeholder="Tell us what you think..."
-					/>
-				</div>
-
-				<button
-					type="submit"
-					disabled={isLoading}
-					className="w-full px-6 py-3 bg-theater-red hover:bg-theater-gold text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					{isLoading ? 'CREATING POST...' : 'CREATE POST'}
-				</button>
-			</form>
+			{/* Form Content */}
+			<div className="bg-white border-5 border-black shadow-brutal p-6">
+				{activeTab === 'search' ? (
+					<MovieSearchForm onPostCreated={handlePostCreated} />
+				) : (
+					<TrailerLinkForm onPostCreated={handlePostCreated} />
+				)}
+			</div>
 		</div>
 	)
 }

@@ -12,7 +12,7 @@ const Home = () => {
 	const searchQuery = searchParams.get('search') || ''
 
 	// Fetch posts based on sort and search
-	const { data: posts, isLoading, error, refetch } = useQuery({
+	const { data: posts, isLoading, error } = useQuery({
 		queryKey: ['posts', sortBy, searchQuery],
 		queryFn: async () => {
 			if (searchQuery) {

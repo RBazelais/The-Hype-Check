@@ -1,7 +1,5 @@
 /* src/index.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* Neo-brutalist custom styles */
 @layer base {
