@@ -5,8 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-// Using mock helpers for presentation
-import { mockSupabaseHelpers as supabaseHelpers } from '../utils/mockSupabaseHelpers'
+// Using real Supabase integration
+import { supabaseHelpers } from '../utils/supabase'
 import toast from 'react-hot-toast'
 
 const EditPost = () => {

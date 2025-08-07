@@ -24,7 +24,7 @@ const TrailerPlayer = ({ url }) => {
 	const cleanUrl = url.trim()
 	const youtubeId = getYouTubeId(cleanUrl)
 
-	// If we can extract a YouTube ID, show embedded player
+	// extract a YouTube ID, show embedded player
 	if (youtubeId) {
 		const embedUrl = `https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&showinfo=0`
 		

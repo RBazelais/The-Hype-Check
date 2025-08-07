@@ -3,8 +3,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { MessageCircle, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-// Using mock helpers for presentation
-import { mockSupabaseHelpers as supabaseHelpers } from '../../utils/mockSupabaseHelpers'
+// Using real Supabase integration
+import { supabaseHelpers } from '../../utils/supabase'
 import toast from 'react-hot-toast'
 
 const CommentForm = ({ postId, onCommentAdded }) => {

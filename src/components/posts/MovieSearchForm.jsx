@@ -1,174 +1,505 @@
 // src/components/posts/MovieSearchForm.jsx
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { Search, Plus, Film, ExternalLink, AlertTriangle } from 'lucide-react'
-import { useAuth } from '../../hooks/useAuth'
-// Using mock helpers for presentation
-import { mockSupabaseHelpers as supabaseHelpers } from '../../utils/mockSupabaseHelpers.js'
-import { searchMovies } from '../../utils/mockTmdbApi.js'
-import toast from 'react-hot-toast'
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { Search, Plus, Film, ExternalLink, AlertTriangle } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
+// Using real Supabase integration
+import { supabaseHelpers } from "../../utils/supabase.js";
+import { searchMovies, getMovieDetails } from "../../utils/tmdbApi.js";
+import toast from "react-hot-toast";
+
+// Helper function to extract YouTube video ID from various URL formats
+const extractYoutubeVideoId = (url) => {
+	if (!url) return null;
+
+	// Handle various YouTube URL formats
+	const patterns = [
+		/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/watch\?.*v=)([^&\n?#]+)/,
+		/(?:youtube\.com\/shorts\/)([^&\n?#]+)/,
+	];
+
+	for (const pattern of patterns) {
+		const match = url.match(pattern);
+		if (match && match[1]) return match[1];
+	}
+
+	return null;
+};
 
 const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
-	const { user } = useAuth()
-	const [searchResults, setSearchResults] = useState([])
-	const [selectedMovie, setSelectedMovie] = useState(null)
-	const [isSearching, setIsSearching] = useState(false)
-	const [isLoading, setIsLoading] = useState(false)
-	const [duplicateWarning, setDuplicateWarning] = useState(null)
-	
+	const { user } = useAuth();
+	const [searchResults, setSearchResults] = useState([]);
+	const [selectedMovie, setSelectedMovie] = useState(null);
+	const [isSearching, setIsSearching] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
+	const [duplicateWarning, setDuplicateWarning] = useState(null);
+	const [isPlayingTrailer, setIsPlayingTrailer] = useState(false);
+
 	const {
 		register,
 		handleSubmit,
 		setValue,
-		formState: { errors }
-	} = useForm()
+		watch, // Add watch to monitor form values
+		formState: { errors },
+	} = useForm(); // Track if movie data has been processed
+	const [movieDataProcessed, setMovieDataProcessed] = useState(false);
 
 	// Handle prefilled movie data from upcoming movies
 	useEffect(() => {
-		if (prefilledMovie) {
-			// Convert the upcoming movie format to our search result format
-			const movieData = {
-				id: prefilledMovie.id,
-				title: prefilledMovie.title,
-				poster_path: prefilledMovie.poster_path,
-				release_date: prefilledMovie.release_date,
-				overview: `Upcoming movie releasing on ${prefilledMovie.release_date}`
+		console.log(
+			"🔍 MovieSearchForm - prefilledMovie:",
+			prefilledMovie,
+			"processed:",
+			movieDataProcessed,
+		);
+
+		// Only process prefilled data once to avoid re-processing on re-renders
+		if (prefilledMovie && !movieDataProcessed) {
+			try {
+				// Make sure we have the required fields
+				if (!prefilledMovie.id || !prefilledMovie.title) {
+					console.error(
+						"🔍 Missing required fields in prefilledMovie:",
+						prefilledMovie,
+					);
+					toast.error("Invalid movie data. Please try again.");
+					setMovieDataProcessed(true); // Mark as processed to avoid repeated errors
+					return;
+				}
+
+				// Fix the poster path to ensure proper handling regardless of format
+				let posterPath = null;
+				if (prefilledMovie.poster_path) {
+					posterPath = prefilledMovie.poster_path.startsWith("http")
+						? prefilledMovie.poster_path
+						: `https://image.tmdb.org/t/p/w500${prefilledMovie.poster_path}`;
+				}
+
+				// Convert the upcoming movie format to our search result format
+				// Store processed URLs to avoid recomputation
+				const movieData = {
+					id: prefilledMovie.id,
+					title: prefilledMovie.title,
+					poster_path: posterPath, // Use the processed path
+					release_date: prefilledMovie.release_date || "TBA",
+					overview: `Upcoming movie releasing on ${prefilledMovie.release_date || "TBA"}`,
+				};
+
+				console.log(
+					"🔍 Setting selected movie from prefilled data:",
+					movieData,
+				);
+
+				// Set all state at once to reduce renders
+				setSelectedMovie(movieData);
+				setValue("searchQuery", movieData.title);
+				setMovieDataProcessed(true);
+
+				// Process duplicates check in background
+				setTimeout(() => {
+					checkForDuplicates(movieData).catch((err) => {
+						console.error(
+							"🔍 Background duplicate check failed:",
+							err,
+						);
+					});
+				}, 100);
+
+				// Fetch movie details including trailer in background
+				setTimeout(async () => {
+					try {
+						console.log(
+							"🎬 Fetching trailer data for prefilled movie:",
+							movieData.id,
+						);
+						const detailedMovie = await getMovieDetails(
+							movieData.id,
+						);
+
+						// Extract trailer information
+						let trailerUrl = null;
+						if (
+							detailedMovie.videos &&
+							detailedMovie.videos.results &&
+							detailedMovie.videos.results.length > 0
+						) {
+							// Find official trailer or teaser
+							const trailers =
+								detailedMovie.videos.results.filter(
+									(video) =>
+										video.site === "YouTube" &&
+										(video.type === "Trailer" ||
+											video.type === "Teaser") &&
+										video.official,
+								);
+
+							// Prioritize official trailers over teasers
+							const officialTrailer = trailers.find(
+								(video) => video.type === "Trailer",
+							);
+							const officialTeaser = trailers.find(
+								(video) => video.type === "Teaser",
+							);
+
+							// Select the best video
+							const bestVideo =
+								officialTrailer ||
+								officialTeaser ||
+								(trailers.length > 0 ? trailers[0] : null);
+
+							if (bestVideo) {
+								trailerUrl = `https://www.youtube.com/watch?v=${bestVideo.key}`;
+								console.log(
+									"🎬 Found trailer URL for prefilled movie:",
+									trailerUrl,
+								);
+
+								// Populate the trailer URL field
+								setValue("trailerUrl", trailerUrl);
+							}
+						}
+
+						// Update selected movie with enhanced data
+						setSelectedMovie((prevMovie) => ({
+							...prevMovie,
+							...detailedMovie,
+							trailer_url: trailerUrl,
+						}));
+					} catch (error) {
+						console.error(
+							"🎬 Error fetching trailer for prefilled movie:",
+							error,
+						);
+						// Continue with basic movie data if trailer fetch fails
+					}
+				}, 200);
+			} catch (error) {
+				console.error(
+					"🔍 Error processing prefilled movie data:",
+					error,
+				);
+				toast.error("Failed to load movie data");
+				setMovieDataProcessed(true); // Mark as processed even on error to prevent infinite loops
 			}
-			setSelectedMovie(movieData)
-			setValue('searchQuery', movieData.title)
-			
-			// Check for existing discussions
-			checkForDuplicates(movieData)
 		}
-	}, [prefilledMovie, setValue])
+	}, [prefilledMovie, setValue, movieDataProcessed]);
 
 	const checkForDuplicates = async (movie) => {
-		const { data: existingPosts } = await supabaseHelpers.searchPosts(movie.title);
-		if (existingPosts && existingPosts.length > 0) {
-			setDuplicateWarning(existingPosts[0])
-		} else {
-			setDuplicateWarning(null)
+		if (!movie || !movie.title) {
+			console.log("🔍 No movie title to check for duplicates");
+			setDuplicateWarning(null);
+			return;
 		}
-	}
+
+		try {
+			console.log("🔍 Checking for duplicates with title:", movie.title);
+			const { data: existingPosts, error } =
+				await supabaseHelpers.searchPosts(movie.title);
+
+			if (error) {
+				console.error("🔍 Error checking duplicates:", error);
+				return;
+			}
+
+			if (existingPosts && existingPosts.length > 0) {
+				console.log("🔍 Found existing posts:", existingPosts);
+				setDuplicateWarning(existingPosts[0]);
+			} else {
+				console.log("🔍 No duplicate posts found");
+				setDuplicateWarning(null);
+			}
+		} catch (error) {
+			console.error("🔍 Exception checking duplicates:", error);
+			// Don't set duplicate warning if there was an error - better UX to continue
+		}
+	};
 
 	// Remove unused searchQuery variable since we handle search in onChange
 
 	const handleMovieSearch = async (query) => {
 		if (!query || query.length < 2) {
-			console.log('🚫 Search query too short or empty:', { query, length: query?.length })
-			setSearchResults([])
-			return
+			console.log("🚫 Search query too short or empty:", {
+				query,
+				length: query?.length,
+			});
+			setSearchResults([]);
+			return;
 		}
 
-		console.log('🔎 Starting movie search for:', query)
-		setIsSearching(true)
+		console.log("🔎 Starting movie search for:", query);
+		setIsSearching(true);
 		try {
-			const results = await searchMovies(query)
-			console.log('✅ Search results received in component:', {
+			const results = await searchMovies(query);
+			console.log("✅ Search results received in component:", {
 				results,
 				resultsType: typeof results,
 				isArray: Array.isArray(results),
-				length: results?.length
-			})
-			
+				length: results?.length,
+			});
+
 			// Handle the API response format - results come wrapped in a results property
-			const movieResults = results?.results || results
-			
-			if (movieResults && Array.isArray(movieResults) && movieResults.length > 0) {
-				const topResults = movieResults.slice(0, 5)
-				console.log('🎬 Setting top 5 search results:', topResults)
-				setSearchResults(topResults)
+			const movieResults = results?.results || results;
+
+			if (
+				movieResults &&
+				Array.isArray(movieResults) &&
+				movieResults.length > 0
+			) {
+				const topResults = movieResults.slice(0, 5);
+				console.log("🎬 Setting top 5 search results:", topResults);
+				setSearchResults(topResults);
 			} else {
-				console.log('❌ No valid results found, setting empty array')
-				setSearchResults([])
+				console.log("❌ No valid results found, setting empty array");
+				setSearchResults([]);
 			}
 		} catch (error) {
-			console.error('💥 Movie search error in component:', error)
-			toast.error('Failed to search movies')
-			setSearchResults([])
+			console.error("💥 Movie search error in component:", error);
+			toast.error("Failed to search movies");
+			setSearchResults([]);
 		} finally {
-			console.log('🏁 Search completed, setting isSearching to false')
-			setIsSearching(false)
+			console.log("🏁 Search completed, setting isSearching to false");
+			setIsSearching(false);
 		}
-	}
+	};
 
 	const selectMovie = async (movie) => {
-		setSelectedMovie(movie)
-		setSearchResults([])
-		setValue('searchQuery', movie.title)
+		// First set the movie data we already have to show immediate feedback
+		setSelectedMovie(movie);
+		setSearchResults([]);
+		setValue("searchQuery", movie.title);
+
+		// Create a loading toast that we'll dismiss when done
+		const loadingToast = toast.loading(
+			"Finding trailer and movie details...",
+		);
+
+		try {
+			console.log(
+				"🎬 Fetching detailed movie info with trailers for:",
+				movie.id,
+			);
+
+			// Fetch detailed movie info including videos
+			const detailedMovie = await getMovieDetails(movie.id);
+			console.log("🎬 Detailed movie data received:", detailedMovie);
+
+			// Extract trailer information
+			let trailerUrl = null;
+			let trailerType = null;
+			let trailerFound = false;
+
+			if (
+				detailedMovie.videos &&
+				detailedMovie.videos.results &&
+				detailedMovie.videos.results.length > 0
+			) {
+				console.log(
+					"🎬 Found videos:",
+					detailedMovie.videos.results.length,
+				);
+
+				// Find official trailer or teaser
+				const trailers = detailedMovie.videos.results.filter(
+					(video) =>
+						video.site === "YouTube" &&
+						(video.type === "Trailer" || video.type === "Teaser") &&
+						video.official,
+				);
+
+				console.log(
+					"🎬 Filtered official YouTube trailers/teasers:",
+					trailers.length,
+				);
+
+				// Prioritize official trailers over teasers
+				const officialTrailer = trailers.find(
+					(video) => video.type === "Trailer",
+				);
+				const officialTeaser = trailers.find(
+					(video) => video.type === "Teaser",
+				);
+
+				// If no official trailers, look for any YouTube trailer/teaser
+				const anyTrailers = detailedMovie.videos.results.filter(
+					(video) =>
+						video.site === "YouTube" &&
+						(video.type === "Trailer" || video.type === "Teaser"),
+				);
+
+				// Select the best video (priority: official trailer > official teaser > any trailer > any teaser)
+				const bestVideo =
+					officialTrailer ||
+					officialTeaser ||
+					(anyTrailers.length > 0 ? anyTrailers[0] : null);
+
+				if (bestVideo) {
+					trailerUrl = `https://www.youtube.com/watch?v=${bestVideo.key}`;
+					trailerType = bestVideo.type;
+					trailerFound = true;
+
+					console.log(
+						`🎬 Found ${bestVideo.official ? "official" : "unofficial"} ${trailerType}:`,
+						trailerUrl,
+					);
+
+					// Automatically populate the trailer URL field
+					setValue("trailerUrl", trailerUrl);
+
+					// Show success toast
+					toast.success(
+						`Found ${bestVideo.official ? "official" : ""} ${trailerType.toLowerCase()}!`,
+						{
+							duration: 2000,
+							icon: "🎬",
+						},
+					);
+				} else {
+					console.log("🎬 No suitable trailers or teasers found");
+					toast.error("No trailer available for this movie", {
+						duration: 2000,
+					});
+				}
+			} else {
+				console.log("🎬 No videos found for this movie");
+			}
+
+			// Process available videos for display
+			const availableVideos =
+				detailedMovie.videos?.results?.filter(
+					(video) => video.site === "YouTube",
+				) || [];
+
+			// Update the movie data with enhanced information
+			setSelectedMovie({
+				...movie,
+				...detailedMovie,
+				trailer_url: trailerUrl,
+				trailer_type: trailerType,
+				has_trailer: trailerFound,
+				manually_entered_trailer: false,
+				available_videos: availableVideos,
+			});
+		} catch (error) {
+			console.error("🎬 Error fetching movie details:", error);
+			toast.error("Could not load trailer information");
+			// Keep using the basic movie data even if fetching details fails
+		} finally {
+			// Dismiss the loading toast
+			toast.dismiss(loadingToast);
+		}
 
 		// Check for duplicates
-		await checkForDuplicates(movie)
-	}
+		await checkForDuplicates(movie);
+	};
 
 	const onSubmit = async (data) => {
+		console.log("🔍 Form submitted with data:", data);
+		console.log("🔍 Selected movie:", selectedMovie);
+
 		if (!selectedMovie) {
-			toast.error('Please select a movie from search results')
-			return
+			toast.error("Please select a movie from search results");
+			return;
 		}
 
 		// Check if user exists (for testing purposes)
 		if (!user) {
-			toast.success('Movie search is working! (Test mode - no user logged in)')
-			console.log('Would create post with data:', {
-				movie: selectedMovie,
-				formData: data
-			})
-			return
+			toast.error("You need to be logged in to create a post");
+			console.log("No user found, cannot create post");
+			return;
 		}
 
-		setIsLoading(true)
+		// Prevent double submissions
+		if (isLoading) {
+			console.log("🔍 Form submission already in progress");
+			return;
+		}
+
+		setIsLoading(true);
 		try {
+			// Make sure we're handling the poster path correctly - could be full URL or just path
+			// We've already processed this in the prefilled effect, but double-check here for safety
+			let imageUrl = selectedMovie.poster_path;
+			if (imageUrl && !imageUrl.startsWith("http")) {
+				imageUrl = `https://image.tmdb.org/t/p/w500${imageUrl}`;
+			}
+
 			const postData = {
 				user_id: user.id,
-				title: data.title || `${selectedMovie.title} - First Impressions`,
+				title:
+					data.title || `${selectedMovie.title} - First Impressions`,
 				content: data.content || null,
-				image_url: selectedMovie.poster_path 
-					? `https://image.tmdb.org/t/p/w500${selectedMovie.poster_path}` 
-					: null,
+				image_url: imageUrl,
 				trailer_url: data.trailerUrl || null,
 				movie_title: selectedMovie.title,
-				upvotes: 0
+				upvotes: 0,
+			};
+
+			console.log("🔍 Creating post with data:", postData);
+
+			// Add timeout for better UX feedback even if the request is fast
+			const startTime = Date.now();
+
+			const { data: newPost, error } =
+				await supabaseHelpers.createPost(postData);
+
+			// Ensure minimum loading time for better UX
+			const elapsed = Date.now() - startTime;
+			if (elapsed < 500) {
+				await new Promise((resolve) =>
+					setTimeout(resolve, 500 - elapsed),
+				);
 			}
 
-			const { data: newPost, error } = await supabaseHelpers.createPost(postData)
-			
 			if (error) {
-				toast.error('Failed to create post')
-				console.error('Error creating post:', error)
+				console.error("🔍 Error creating post:", error);
+				toast.error(error.message || "Failed to create post");
+			} else if (!newPost || !newPost[0]) {
+				console.error("🔍 No post data returned");
+				toast.error("Failed to create post - no data returned");
 			} else {
-				toast.success('Hype check created!')
-				onPostCreated?.(newPost[0].id)
+				console.log("🔍 Post created successfully:", newPost[0]);
+				toast.success("Hype check created!");
+
+				// Navigate only after we're sure the submission succeeded
+				if (newPost[0]?.id) {
+					onPostCreated?.(newPost[0].id);
+				}
 			}
 		} catch (error) {
-			toast.error('Something went wrong')
-			console.error('Error:', error)
+			console.error("🔍 Exception creating post:", error);
+			toast.error("Something went wrong");
 		} finally {
-			setIsLoading(false)
+			setIsLoading(false);
 		}
-	}
+	};
 
 	return (
 		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 			{/* Movie Search */}
 			<div>
 				<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
-					{prefilledMovie ? 'SELECTED MOVIE' : 'SEARCH FOR MOVIE *'}
+					{prefilledMovie ? "SELECTED MOVIE" : "SEARCH FOR MOVIE *"}
 				</label>
 				<div className="relative">
 					<input
 						type="text"
-						{...register('searchQuery', {
-							required: 'Please search and select a movie'
+						{...register("searchQuery", {
+							required: "Please search and select a movie",
 						})}
-						onChange={(e) => !prefilledMovie && handleMovieSearch(e.target.value)}
+						onChange={(e) =>
+							!prefilledMovie && handleMovieSearch(e.target.value)
+						}
 						disabled={!!prefilledMovie}
 						className={`w-full px-4 py-3 pr-12 border-3 border-black font-mono focus:outline-none transition-all ${
-							prefilledMovie 
-								? 'bg-concrete-200 text-concrete-700 cursor-not-allowed' 
-								: 'bg-concrete-50 focus:bg-white focus:shadow-brutal-sm'
+							prefilledMovie
+								? "bg-concrete-200 text-concrete-700 cursor-not-allowed"
+								: "bg-concrete-50 focus:bg-white focus:shadow-brutal-sm"
 						}`}
-						placeholder={prefilledMovie ? prefilledMovie.title : "Start typing a movie title..."}
+						placeholder={
+							prefilledMovie
+								? prefilledMovie.title
+								: "Start typing a movie title..."
+						}
 					/>
 					<div className="absolute right-3 top-1/2 transform -translate-y-1/2">
 						{!prefilledMovie && isSearching ? (
@@ -211,11 +542,16 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 										{movie.title}
 									</h4>
 									<p className="font-mono text-xs text-concrete-600">
-										{movie.release_date ? new Date(movie.release_date).getFullYear() : 'TBA'}
+										{movie.release_date
+											? new Date(
+													movie.release_date,
+												).getFullYear()
+											: "TBA"}
 									</p>
 									{movie.overview && (
 										<p className="font-mono text-xs text-concrete-500 mt-1 line-clamp-2">
-											{movie.overview.substring(0, 100)}...
+											{movie.overview.substring(0, 100)}
+											...
 										</p>
 									)}
 								</div>
@@ -230,20 +566,39 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 				<div className="p-4 bg-theater-gold border-3 border-black">
 					<div className="flex items-center gap-2 mb-2">
 						<Film size={20} className="text-black" />
-						<span className="font-mono font-bold text-black">SELECTED MOVIE</span>
+						<span className="font-mono font-bold text-black">
+							SELECTED MOVIE
+						</span>
 					</div>
 					<div className="flex items-start gap-3">
 						{selectedMovie.poster_path && (
 							<img
-								src={`https://image.tmdb.org/t/p/w92${selectedMovie.poster_path}`}
+								src={
+									selectedMovie.poster_path.startsWith("http")
+										? selectedMovie.poster_path
+										: `https://image.tmdb.org/t/p/w92${selectedMovie.poster_path}`
+								}
 								alt={selectedMovie.title}
 								className="w-16 h-24 object-cover border-3 border-black"
+								onError={(e) => {
+									console.log(
+										"🔍 Selected movie poster failed to load:",
+										e.target.src,
+									);
+									e.target.style.opacity = "0.5";
+								}}
 							/>
 						)}
 						<div>
-							<h3 className="font-brutal text-lg text-black">{selectedMovie.title}</h3>
+							<h3 className="font-brutal text-lg text-black">
+								{selectedMovie.title}
+							</h3>
 							<p className="font-mono text-sm text-concrete-800">
-								{selectedMovie.release_date ? new Date(selectedMovie.release_date).getFullYear() : 'TBA'}
+								{selectedMovie.release_date
+									? new Date(
+											selectedMovie.release_date,
+										).getFullYear()
+									: "TBA"}
 							</p>
 						</div>
 					</div>
@@ -254,13 +609,17 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 			{duplicateWarning && (
 				<div className="p-3 bg-street-yellow border-3 border-black">
 					<div className="flex items-start gap-2">
-						<AlertTriangle size={20} className="text-theater-red flex-shrink-0 mt-0.5" />
+						<AlertTriangle
+							size={20}
+							className="text-theater-red flex-shrink-0 mt-0.5"
+						/>
 						<div>
 							<p className="font-mono font-bold text-black text-sm mb-1">
 								DISCUSSION ALREADY EXISTS
 							</p>
 							<p className="font-mono text-xs text-concrete-800 mb-2">
-								Someone already started a discussion about this movie
+								Someone already started a discussion about this
+								movie
 							</p>
 							<a
 								href={`/post/${duplicateWarning.id}`}
@@ -274,20 +633,265 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 				</div>
 			)}
 
-			{/* Trailer URL (Optional) */}
+			{/* Trailer URL Field */}
 			<div>
 				<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
-					TRAILER URL (OPTIONAL)
+					{selectedMovie?.trailer_url
+						? "TRAILER LINK (AUTO-POPULATED)"
+						: "TRAILER URL (OPTIONAL)"}
 				</label>
-				<input
-					type="url"
-					{...register('trailerUrl')}
-					className="w-full px-4 py-3 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all"
-					placeholder="https://www.youtube.com/watch?v=..."
-				/>
-				<p className="mt-2 text-xs font-mono text-concrete-600">
-					Add a specific trailer link if you have one
-				</p>
+				<div className="relative">
+					<input
+						type="url"
+						{...register("trailerUrl")}
+						onChange={(e) => {
+							// Reset playing state when URL changes
+							if (isPlayingTrailer) {
+								setIsPlayingTrailer(false);
+							}
+
+							// If the user manually changes the trailer URL, update the selectedMovie state
+							if (
+								e.target.value &&
+								e.target.value !== selectedMovie?.trailer_url
+							) {
+								setSelectedMovie((prev) => ({
+									...prev,
+									trailer_url: e.target.value,
+									manually_entered_trailer: true,
+								}));
+							} else if (!e.target.value) {
+								// If the field is cleared
+								setSelectedMovie((prev) => ({
+									...prev,
+									trailer_url: null,
+									manually_entered_trailer: false,
+								}));
+							}
+						}}
+						className={`w-full px-4 py-3 bg-concrete-50 border-3 ${
+							selectedMovie?.trailer_url
+								? selectedMovie?.manually_entered_trailer
+									? "border-concrete-500"
+									: "border-theater-gold"
+								: "border-black"
+						} font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all`}
+						placeholder="https://www.youtube.com/watch?v=..."
+					/>
+					{selectedMovie?.trailer_url &&
+						!selectedMovie?.manually_entered_trailer && (
+							<div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theater-gold">
+								✓
+							</div>
+						)}
+				</div>
+				{selectedMovie?.trailer_url ? (
+					<p
+						className={`mt-2 text-xs font-mono font-bold ${selectedMovie?.manually_entered_trailer ? "text-concrete-600" : "text-theater-gold"}`}
+					>
+						{selectedMovie?.manually_entered_trailer
+							? "Manual trailer URL entered"
+							: "✨ Official trailer automatically found from TMDB"}
+					</p>
+				) : (
+					<p className="mt-2 text-xs font-mono text-concrete-600">
+						Add a specific trailer link if you have one
+					</p>
+				)}
+
+				{/* Available Videos Dropdown */}
+				{selectedMovie?.available_videos?.length > 0 && (
+					<div className="mt-3 bg-concrete-100 p-3 border-l-4 border-theater-gold">
+						<label className="block font-mono text-sm text-concrete-800 mb-2 font-bold">
+							{selectedMovie.available_videos.length} AVAILABLE
+							VIDEOS:
+						</label>
+						<div className="relative">
+							<select
+								className="w-full px-4 py-3 bg-white border-2 border-concrete-400 font-mono text-sm appearance-none"
+								value={
+									selectedMovie.trailer_url
+										? extractYoutubeVideoId(
+												selectedMovie.trailer_url,
+											) || ""
+										: ""
+								}
+								onChange={(e) => {
+									if (e.target.value) {
+										// Reset playing state
+										if (isPlayingTrailer)
+											setIsPlayingTrailer(false);
+
+										// Get the selected video
+										const videoId = e.target.value;
+										const selectedVideo =
+											selectedMovie.available_videos.find(
+												(v) => v.key === videoId,
+											);
+
+										if (selectedVideo) {
+											const newTrailerUrl = `https://www.youtube.com/watch?v=${selectedVideo.key}`;
+											// Update form and state
+											setValue(
+												"trailerUrl",
+												newTrailerUrl,
+											);
+											setSelectedMovie((prev) => ({
+												...prev,
+												trailer_url: newTrailerUrl,
+												trailer_type:
+													selectedVideo.type,
+												manually_entered_trailer: false,
+											}));
+
+											toast.success(
+												`Selected: ${selectedVideo.type} - ${selectedVideo.name}`,
+												{
+													duration: 2000,
+												},
+											);
+										}
+									}
+								}}
+							>
+								<option value="">
+									-- Choose a different video --
+								</option>
+								{selectedMovie.available_videos.map((video) => (
+									<option key={video.key} value={video.key}>
+										{video.type}{" "}
+										{video.official ? "(Official)" : ""}:{" "}
+										{video.name}
+									</option>
+								))}
+							</select>
+							<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-concrete-600">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<polyline points="6 9 12 15 18 9"></polyline>
+								</svg>
+							</div>
+						</div>
+						<p className="mt-2 text-xs font-mono text-concrete-600">
+							Select from all available videos for this movie
+						</p>
+					</div>
+				)}
+
+				{/* Trailer Preview */}
+				{selectedMovie?.trailer_url && (
+					<div className="mt-4 border-3 border-black">
+						<div className="aspect-video bg-black relative overflow-hidden">
+							{/* Embedded YouTube player */}
+							{isPlayingTrailer &&
+							extractYoutubeVideoId(selectedMovie.trailer_url) ? (
+								<iframe
+									src={`https://www.youtube.com/embed/${extractYoutubeVideoId(selectedMovie.trailer_url)}?rel=0&autoplay=1`}
+									title={`${selectedMovie.title} - ${selectedMovie.trailer_type || "Trailer"}`}
+									allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+									allowFullScreen
+									className="absolute inset-0 w-full h-full"
+								/>
+							) : extractYoutubeVideoId(
+									selectedMovie.trailer_url,
+							  ) ? (
+								<div className="absolute inset-0">
+									<img
+										src={`https://img.youtube.com/vi/${extractYoutubeVideoId(selectedMovie.trailer_url)}/maxresdefault.jpg`}
+										alt="Trailer thumbnail"
+										className="w-full h-full object-cover"
+										onError={(e) => {
+											// Fallback to medium quality thumbnail if HD is not available
+											e.target.src = `https://img.youtube.com/vi/${extractYoutubeVideoId(selectedMovie.trailer_url)}/mqdefault.jpg`;
+										}}
+									/>
+									<div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+										<button
+											onClick={() =>
+												setIsPlayingTrailer(true)
+											}
+											className="bg-theater-red hover:bg-red-700 text-white rounded-full w-16 h-16 flex items-center justify-center transition-colors"
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												width="24"
+												height="24"
+												viewBox="0 0 24 24"
+												fill="currentColor"
+											>
+												<path d="M8 5v14l11-7z" />
+											</svg>
+										</button>
+									</div>
+								</div>
+							) : (
+								<div className="absolute inset-0 flex items-center justify-center text-white font-mono">
+									<p>Cannot preview this video format</p>
+								</div>
+							)}
+						</div>
+						<div className="bg-concrete-800 text-white p-3 font-mono text-sm flex justify-between items-center">
+							<span
+								className={`font-bold ${selectedMovie.manually_entered_trailer ? "text-white" : "text-theater-gold"}`}
+							>
+								{selectedMovie.manually_entered_trailer
+									? "MANUAL VIDEO LINK"
+									: selectedMovie.trailer_type === "Teaser"
+										? "✓ OFFICIAL TEASER"
+										: "✓ OFFICIAL TRAILER"}
+							</span>
+							<div className="flex gap-3">
+								{isPlayingTrailer && (
+									<button
+										onClick={() =>
+											setIsPlayingTrailer(false)
+										}
+										className="hover:underline inline-flex items-center justify-center gap-1 text-white"
+									>
+										Close Player
+									</button>
+								)}
+								<a
+									href={selectedMovie.trailer_url}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="hover:underline inline-flex items-center justify-center gap-1 text-white"
+								>
+									Watch on YouTube
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="14"
+										height="14"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+										<polyline points="15 3 21 3 21 9"></polyline>
+										<line
+											x1="10"
+											y1="14"
+											x2="21"
+											y2="3"
+										></line>
+									</svg>
+								</a>
+							</div>
+						</div>
+					</div>
+				)}
 			</div>
 
 			{/* Custom Title (Optional) */}
@@ -297,9 +901,13 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 				</label>
 				<input
 					type="text"
-					{...register('title')}
+					{...register("title")}
 					className="w-full px-4 py-3 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all"
-					placeholder={selectedMovie ? `${selectedMovie.title} - Your take here` : "Leave blank for auto-generated title"}
+					placeholder={
+						selectedMovie
+							? `${selectedMovie.title} - Your take here`
+							: "Leave blank for auto-generated title"
+					}
 				/>
 				<p className="mt-2 text-xs font-mono text-concrete-600">
 					Leave blank to auto-generate from movie title
@@ -312,7 +920,7 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 					YOUR REACTION (OPTIONAL)
 				</label>
 				<textarea
-					{...register('content')}
+					{...register("content")}
 					rows={4}
 					className="w-full px-4 py-3 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all resize-none"
 					placeholder="What do you think about this movie? Excited for the trailer? Share your expectations..."
@@ -329,16 +937,16 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 				className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-black hover:bg-gray-800 text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 			>
 				{isLoading ? (
-					'CREATING HYPE CHECK...'
+					"CREATING HYPE CHECK..."
 				) : (
 					<>
 						<Plus size={20} />
-						{user ? 'CREATE HYPE CHECK' : 'TEST MOVIE SEARCH'}
+						{user ? "CREATE HYPE CHECK" : "TEST MOVIE SEARCH"}
 					</>
 				)}
 			</button>
 		</form>
-	)
-}
+	);
+};
 
-export default MovieSearchForm
+export default MovieSearchForm;

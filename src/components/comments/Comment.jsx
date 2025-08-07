@@ -1,8 +1,11 @@
 // src/components/comments/Comment.jsx
 import { useState } from 'react'
+import { formatDistanceToNow } from 'date-fns'
+import { Trash2, User } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-// Using mock helpers for presentation
-import { mockSupabaseHelpers as supabaseHelpers } from '../../utils/mockSupabaseHelpers'
+// Using real Supabase integration
+import { supabaseHelpers } from '../../utils/supabase'
+import toast from 'react-hot-toast'
 import SpoilerText from './SpoilerText'
 
 const Comment = ({ comment, onCommentUpdated, onCommentDeleted }) => {

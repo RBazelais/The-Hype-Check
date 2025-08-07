@@ -5,8 +5,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ThumbsUp, Edit3, Trash2, User, Clock } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../hooks/useAuth'
-// Using mock helpers for presentation
-import { mockSupabaseHelpers as supabaseHelpers } from '../utils/mockSupabaseHelpers'
+// Using real Supabase integration
+import { supabaseHelpers } from '../utils/supabase'
+import CommentForm from '../components/comments/CommentForm'
 import TrailerPlayer from '../components/posts/TrailerPlayer'
 import CommentSection from '../components/comments/CommentSection'
 import toast from 'react-hot-toast'

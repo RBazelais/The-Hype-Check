@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { Search, Link, Film, Star } from 'lucide-react'
+import toast from 'react-hot-toast'
 import MovieSearchForm from '../components/posts/MovieSearchForm'
 import TrailerLinkForm from '../components/posts/TrailerLinkForm'
 
@@ -11,29 +12,78 @@ const CreatePost = () => {
 	const location = useLocation()
 	const [prefilledMovie, setPrefilledMovie] = useState(null)
 
+	// Use ref to track if we've already processed the movie data
+	const movieProcessed = useRef(false)
+	
 	// Check if we have prefilled movie data from upcoming movies
 	useEffect(() => {
-		if (movieId && location.state?.prefilledMovie) {
-			setPrefilledMovie(location.state.prefilledMovie)
+		console.log('🎬 CreatePost mounted with movieId:', movieId, 'processed:', movieProcessed.current)
+		console.log('🎬 Location state:', location.state)
+		
+		// Only process once to avoid resetting on re-renders
+		if (movieId && location.state?.prefilledMovie && !movieProcessed.current) {
+			console.log('🎬 Setting prefilled movie data:', location.state.prefilledMovie)
+			
+			// Create a local copy of the data to avoid reference issues
+			const movieData = {
+				id: location.state.prefilledMovie.id,
+				title: location.state.prefilledMovie.title,
+				poster_path: location.state.prefilledMovie.poster_path,
+				release_date: location.state.prefilledMovie.release_date
+			};
+			
+			setPrefilledMovie(movieData)
 			// Default to search tab when coming from upcoming movies
 			setActiveTab('search')
+			movieProcessed.current = true
 		}
 	}, [movieId, location.state])
 
 	const handlePostCreated = (postId) => {
-		navigate(`/post/${postId}`)
+		console.log('🎬 Post created, navigating to post detail:', postId)
+		
+		// Use replace: true to avoid back button issues
+		navigate(`/post/${postId}`, { replace: true })
 	}
 
+	// Function to force reset if needed
+	const handleForceRefresh = () => {
+		// Clear any stale state
+		movieProcessed.current = false;
+		setPrefilledMovie(null);
+		
+		// Force navigation back to create route to reset everything
+		navigate('/create', { replace: true });
+		
+		// Show feedback
+		toast('Page refreshed', { 
+			icon: '🔄', 
+		});
+	}
+	
 	return (
 		<div className="max-w-2xl mx-auto">
 			{/* Header */}
 			<div className="mb-8">
-				<h1 className="font-brutal text-4xl text-concrete-900 mb-2">
-					CREATE HYPE CHECK
-				</h1>
-				<p className="font-mono text-concrete-600">
-					Share your reaction to a movie trailer
-				</p>
+				<div className="flex justify-between items-start">
+					<div>
+						<h1 className="font-brutal text-4xl text-concrete-900 mb-2">
+							CREATE HYPE CHECK
+						</h1>
+						<p className="font-mono text-concrete-600">
+							Share your reaction to a movie trailer
+						</p>
+					</div>
+					
+					{/* Debug button - small and subtle */}
+					<button 
+						onClick={handleForceRefresh}
+						className="text-xs font-mono text-concrete-500 hover:text-theater-red px-2 py-1 border border-concrete-300 hover:border-concrete-600 rounded"
+						title="Refresh page if stuck loading"
+					>
+						🔄 Reset
+					</button>
+				</div>
 			</div>
 
 			{/* Pre-filled Movie Banner */}

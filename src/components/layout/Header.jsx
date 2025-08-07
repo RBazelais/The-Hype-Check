@@ -60,88 +60,132 @@ const Header = () => {
 
     return (
         <>
-            <header className="bg-concrete-900 border-b-5 border-black">
+            <header className="bg-gray-900 border-b-4 border-black">
                 <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        {/* Logo */}
-                        <Link to="/" className="group">
-                            <h1 className="font-brutal text-3xl text-theater-gold hover:text-street-yellow transition-colors">
-                                THE HYPE CHECK
-                            </h1>
-                            <div className="font-mono text-xs text-concrete-300 group-hover:text-concrete-100 transition-colors">
-                                movie//trailer//discussions
-                            </div>
-                        </Link>
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                        {/* Top row: Logo and Nav (on mobile) */}
+                        <div className="flex items-center justify-between">
+                            {/* Logo */}
+                            <Link to="/" className="group flex-shrink-0">
+                                <h1 className="font-bold text-2xl md:text-3xl text-yellow-400 hover:text-yellow-300 transition-colors">
+                                    THE HYPE CHECK
+                                </h1>
+                                <div className="font-mono text-xs text-gray-300 group-hover:text-gray-100 transition-colors">
+                                    movie//trailer//discussions
+                                </div>
+                            </Link>
 
-                        {/* Search Bar */}
-                        <form
-                            onSubmit={handleSearch}
-                            className="flex-1 max-w-md mx-8"
-                        >
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) =>
-                                        setSearchQuery(e.target.value)
-                                    }
-                                    placeholder="FIND DISCUSSIONS..."
-                                    className="w-full px-4 py-3 bg-concrete-100 border-3 border-black font-mono text-sm text-black placeholder-concrete-600 focus:bg-white focus:outline-none focus:shadow-brutal-sm transition-all"
-                                />
-                                <button
-                                    type="submit"
-                                    className="absolute right-0 top-0 h-full px-4 bg-theater-red hover:bg-red-700 text-white border-l-3 border-black transition-colors"
-                                >
-                                    <Search size={18} className="text-black" />
-                                </button>
-                            </div>
-                        </form>
-
-                        {/* Navigation */}
-                        <nav className="flex items-center gap-4">
-                            {user ? (
-                                <>
-                                    <Link
-                                        to="/create"
-                                        className="flex items-center gap-2 px-4 py-2 bg-street-yellow hover:bg-yellow-500 text-black font-mono font-bold border-3 border-black shadow-brutal-sm hover:shadow-none transition-all"
-                                    >
-                                        <Plus size={18} className="text-black" />
-                                        NEW HYPE
-                                    </Link>
-
-                                    <div className="flex items-center gap-2 text-concrete-100">
-                                        <User size={18} className="text-concrete-100" />
-                                        <span className="font-mono text-sm">
-                                            {profile?.display_name || "User"}
-                                        </span>
+                            {/* Mobile Navigation */}
+                            <nav className="flex lg:hidden items-center gap-2">
+                                {user ? (
+                                    <div className="flex items-center gap-2">
+                                        <Link
+                                            to="/create"
+                                            className="flex items-center gap-1 px-3 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-mono font-bold border-2 border-black text-sm transition-all"
+                                        >
+                                            <Plus size={16} />
+                                            <span className="hidden sm:inline">NEW HYPE</span>
+                                        </Link>
+                                        <button
+                                            onClick={handleSignOut}
+                                            className="flex items-center gap-1 px-2 py-2 bg-gray-700 hover:bg-red-600 text-gray-100 hover:text-white font-mono border-2 border-black text-sm transition-colors"
+                                        >
+                                            <LogOut size={16} />
+                                        </button>
                                     </div>
+                                ) : (
+                                    <div className="flex gap-1">
+                                        <button
+                                            onClick={() => openAuthModal("login")}
+                                            className="flex items-center gap-1 px-3 py-2 bg-black hover:bg-gray-800 text-white font-mono font-bold border-2 border-black text-sm transition-all"
+                                        >
+                                            <LogIn size={16} />
+                                            <span className="hidden sm:inline">LOGIN</span>
+                                        </button>
+                                        <button
+                                            onClick={() => openAuthModal("signup")}
+                                            className="px-3 py-2 bg-white hover:bg-gray-100 text-black font-mono border-2 border-black text-sm transition-colors"
+                                        >
+                                            <span className="hidden sm:inline">SIGN UP</span>
+                                            <span className="sm:hidden">JOIN</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </nav>
+                        </div>
 
+                        {/* Second row: Search Bar and Desktop Navigation */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-1">
+                            {/* Search Bar */}
+                            <form
+                                onSubmit={handleSearch}
+                                className="flex-1 lg:max-w-md lg:mx-8 min-w-0"
+                            >
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) =>
+                                            setSearchQuery(e.target.value)
+                                        }
+                                        placeholder="FIND DISCUSSIONS..."
+                                        className="w-full min-w-48 px-4 py-3 bg-gray-100 border-2 border-black font-mono text-sm text-black placeholder-gray-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all"
+                                    />
                                     <button
-                                        onClick={handleSignOut}
-                                        className="flex items-center gap-2 px-3 py-2 bg-concrete-700 hover:bg-concrete-600 text-concrete-100 font-mono border-3 border-black transition-colors"
+                                        type="submit"
+                                        className="absolute right-0 top-0 h-full px-4 bg-red-600 hover:bg-red-700 text-white border-l-2 border-black transition-colors"
                                     >
-                                        <LogOut size={16} className="text-concrete-100" />
-                                        SIGNOUT
-                                    </button>
-                                </>
-                            ) : (
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => openAuthModal("login")}
-                                        className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 text-white font-mono font-bold border-3 border-black shadow-brutal-sm hover:shadow-none transition-all"
-                                    >
-                                        <LogIn size={18} className="text-white" />
-                                        LOGIN
-                                    </button>
-                                    <button
-                                        onClick={() => openAuthModal("signup")}
-                                        className="px-4 py-2 bg-white hover:bg-gray-100 text-black font-mono border-3 border-black transition-colors"
-                                    >
-                                        SIGN UP
+                                        <Search size={18} />
                                     </button>
                                 </div>
-                            )}
-                        </nav>
+                            </form>
+
+                            {/* Desktop Navigation */}
+                            <nav className="hidden lg:flex items-center gap-4 flex-shrink-0">
+                                {user ? (
+                                    <>
+                                        <Link
+                                            to="/create"
+                                            className="flex items-center gap-2 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-mono font-bold border-2 border-black transition-all"
+                                        >
+                                            <Plus size={18} />
+                                            NEW HYPE
+                                        </Link>
+
+                                        <div className="flex items-center gap-2 text-gray-100">
+                                            <User size={18} />
+                                            <span className="font-mono text-sm">
+                                                {profile?.display_name || "User"}
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            onClick={handleSignOut}
+                                            className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-red-600 text-gray-100 hover:text-white font-mono border-2 border-black transition-colors"
+                                        >
+                                            <LogOut size={16} />
+                                            SIGNOUT
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => openAuthModal("login")}
+                                            className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 text-white font-mono font-bold border-2 border-black transition-all"
+                                        >
+                                            <LogIn size={18} />
+                                            LOGIN
+                                        </button>
+                                        <button
+                                            onClick={() => openAuthModal("signup")}
+                                            className="px-4 py-2 bg-white hover:bg-gray-100 text-black font-mono border-2 border-black transition-colors"
+                                        >
+                                            SIGN UP
+                                        </button>
+                                    </div>
+                                )}
+                            </nav>
+                        </div>
                     </div>
                 </div>
             </header>
