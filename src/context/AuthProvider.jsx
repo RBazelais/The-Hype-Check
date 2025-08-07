@@ -35,22 +35,28 @@ export const AuthProvider = ({ children }) => {
 		return () => subscription.unsubscribe()
 	}, [])
 
-	const fetchProfile = async (userId) => {
-		try {
-			const { data, error } = await supabase
-				.from('profiles')
-				.select('*')
-				.eq('id', userId)
-				.single()
+const fetchProfile = async (userId) => {
+	try {
+		const { data, error } = await supabase
+			.from('profiles')
+			.select('*')
+			.eq('id', userId)
+			.single()
 
-			if (error) throw error
-			setProfile(data)
-		} catch (error) {
-			console.error('Error fetching profile:', error)
-		} finally {
+		if (error || !data) {
+			setProfile(null)
 			setLoading(false)
+			return
 		}
+		setProfile(data)
+	} catch (error) {
+		setProfile(null)
+		setLoading(false)
+		console.error('Error fetching profile:', error)
+	} finally {
+		setLoading(false)
 	}
+}
 
 	const signUp = async (email, password, displayName) => {
 		const { data, error } = await supabase.auth.signUp({

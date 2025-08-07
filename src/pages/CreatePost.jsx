@@ -1,12 +1,24 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Search, Link, Film } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import { Search, Link, Film, Star } from 'lucide-react'
 import MovieSearchForm from '../components/posts/MovieSearchForm'
 import TrailerLinkForm from '../components/posts/TrailerLinkForm'
 
 const CreatePost = () => {
 	const [activeTab, setActiveTab] = useState('search') // 'search' or 'manual'
 	const navigate = useNavigate()
+	const { movieId } = useParams()
+	const location = useLocation()
+	const [prefilledMovie, setPrefilledMovie] = useState(null)
+
+	// Check if we have prefilled movie data from upcoming movies
+	useEffect(() => {
+		if (movieId && location.state?.prefilledMovie) {
+			setPrefilledMovie(location.state.prefilledMovie)
+			// Default to search tab when coming from upcoming movies
+			setActiveTab('search')
+		}
+	}, [movieId, location.state])
 
 	const handlePostCreated = (postId) => {
 		navigate(`/post/${postId}`)
@@ -23,6 +35,39 @@ const CreatePost = () => {
 					Share your reaction to a movie trailer
 				</p>
 			</div>
+
+			{/* Pre-filled Movie Banner */}
+			{prefilledMovie && (
+				<div className="mb-8 bg-theater-gold border-3 border-black p-6 shadow-brutal">
+					<div className="flex items-center gap-4">
+						<div className="flex-shrink-0">
+							<img
+								src={prefilledMovie.poster_path}
+								alt={`${prefilledMovie.title} poster`}
+								className="w-16 h-24 object-cover border-2 border-black"
+								onError={(e) => {
+									e.target.style.display = 'none'
+									e.target.nextElementSibling.style.display = 'flex'
+								}}
+							/>
+							<div className="w-16 h-24 bg-theater-red border-2 border-black hidden items-center justify-center">
+								<Star size={20} className="text-white" />
+							</div>
+						</div>
+						<div className="flex-1">
+							<h3 className="font-brutal text-xl text-black mb-1">
+								{prefilledMovie.title}
+							</h3>
+							<p className="font-mono text-sm text-black opacity-80 mb-2">
+								Release Date: {prefilledMovie.release_date}
+							</p>
+							<p className="font-mono text-sm text-black font-bold">
+								🎬 CREATE THE FIRST HYPE CHECK FOR THIS MOVIE!
+							</p>
+						</div>
+					</div>
+				</div>
+			)}
 
 			{/* Tab Selection */}
 			<div className="mb-8">
@@ -84,7 +129,10 @@ const CreatePost = () => {
 			{/* Form Content */}
 			<div className="bg-white border-5 border-black shadow-brutal p-6">
 				{activeTab === 'search' ? (
-					<MovieSearchForm onPostCreated={handlePostCreated} />
+					<MovieSearchForm 
+						onPostCreated={handlePostCreated} 
+						prefilledMovie={prefilledMovie}
+					/>
 				) : (
 					<TrailerLinkForm onPostCreated={handlePostCreated} />
 				)}

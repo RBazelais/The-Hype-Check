@@ -1,7 +1,9 @@
 // src/components/comments/Comment.jsx
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { supabaseHelpers } from '../../utils/supabase'
+// Using mock helpers for presentation
+import { mockSupabaseHelpers as supabaseHelpers } from '../../utils/mockSupabaseHelpers'
+import SpoilerText from './SpoilerText'
 
 const Comment = ({ comment, onCommentUpdated, onCommentDeleted }) => {
 	const { user } = useAuth()
@@ -21,7 +23,7 @@ const Comment = ({ comment, onCommentUpdated, onCommentDeleted }) => {
 			return
 		}
 
-		onCommentUpdated(data[0])
+		onCommentUpdated(data)
 		setIsEditing(false)
 	}
 
@@ -46,6 +48,27 @@ const Comment = ({ comment, onCommentUpdated, onCommentDeleted }) => {
 			day: 'numeric',
 			hour: '2-digit',
 			minute: '2-digit'
+		})
+	}
+
+	// Process spoiler tags in comment content
+	const processContent = (content) => {
+		if (!content) return content
+
+		// Split content by spoiler tags and process each part
+		const parts = content.split(/(\[spoiler\].*?\[\/spoiler\])/g)
+		
+		return parts.map((part, index) => {
+			// Check if this part is a spoiler
+			const spoilerMatch = part.match(/\[spoiler\](.*?)\[\/spoiler\]/)
+			
+			if (spoilerMatch) {
+				const spoilerContent = spoilerMatch[1]
+				return <SpoilerText key={index} content={spoilerContent} />
+			}
+			
+			// Regular text - preserve line breaks
+			return <span key={index}>{part}</span>
 		})
 	}
 
@@ -120,7 +143,7 @@ const Comment = ({ comment, onCommentUpdated, onCommentDeleted }) => {
 				</div>
 			) : (
 				<div className="font-mono text-concrete-700 whitespace-pre-wrap">
-					{comment.content}
+					{processContent(comment.content)}
 				</div>
 			)}
 		</div>

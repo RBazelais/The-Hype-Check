@@ -21,16 +21,12 @@ export default {
 					800: '#212529',
 					900: '#1a1e21',
 				},
-				'theater': {
-					red: '#dc2626',
-					gold: '#fbbf24',
-					velvet: '#7c2d12',
-				},
-				'street': {
-					yellow: '#eab308',
-					orange: '#ea580c',
-					pink: '#ec4899',
-				}
+				'theater-red': '#dc2626',
+				'theater-gold': '#fbbf24',
+				'theater-velvet': '#7c2d12',
+				'street-yellow': '#eab308',
+				'street-orange': '#ea580c',
+				'street-pink': '#ec4899',
 			},
 			fontFamily: {
 				'brutal': ['Impact', 'Arial Black', 'sans-serif'],

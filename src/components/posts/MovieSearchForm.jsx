@@ -1,14 +1,14 @@
 // src/components/posts/MovieSearchForm.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Search, Plus, Film, ExternalLink, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-import { supabaseHelpers } from '../../utils/supabase.js'
-import { searchMovies } from '../../utils/tmdbApi.js'
-import { checkForDuplicates } from '../../utils/duplicateDetection.js'
+// Using mock helpers for presentation
+import { mockSupabaseHelpers as supabaseHelpers } from '../../utils/mockSupabaseHelpers.js'
+import { searchMovies } from '../../utils/mockTmdbApi.js'
 import toast from 'react-hot-toast'
 
-const MovieSearchForm = ({ onPostCreated }) => {
+const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 	const { user } = useAuth()
 	const [searchResults, setSearchResults] = useState([])
 	const [selectedMovie, setSelectedMovie] = useState(null)
@@ -22,6 +22,34 @@ const MovieSearchForm = ({ onPostCreated }) => {
 		setValue,
 		formState: { errors }
 	} = useForm()
+
+	// Handle prefilled movie data from upcoming movies
+	useEffect(() => {
+		if (prefilledMovie) {
+			// Convert the upcoming movie format to our search result format
+			const movieData = {
+				id: prefilledMovie.id,
+				title: prefilledMovie.title,
+				poster_path: prefilledMovie.poster_path,
+				release_date: prefilledMovie.release_date,
+				overview: `Upcoming movie releasing on ${prefilledMovie.release_date}`
+			}
+			setSelectedMovie(movieData)
+			setValue('searchQuery', movieData.title)
+			
+			// Check for existing discussions
+			checkForDuplicates(movieData)
+		}
+	}, [prefilledMovie, setValue])
+
+	const checkForDuplicates = async (movie) => {
+		const { data: existingPosts } = await supabaseHelpers.searchPosts(movie.title);
+		if (existingPosts && existingPosts.length > 0) {
+			setDuplicateWarning(existingPosts[0])
+		} else {
+			setDuplicateWarning(null)
+		}
+	}
 
 	// Remove unused searchQuery variable since we handle search in onChange
 
@@ -43,8 +71,11 @@ const MovieSearchForm = ({ onPostCreated }) => {
 				length: results?.length
 			})
 			
-			if (results && Array.isArray(results) && results.length > 0) {
-				const topResults = results.slice(0, 5)
+			// Handle the API response format - results come wrapped in a results property
+			const movieResults = results?.results || results
+			
+			if (movieResults && Array.isArray(movieResults) && movieResults.length > 0) {
+				const topResults = movieResults.slice(0, 5)
 				console.log('🎬 Setting top 5 search results:', topResults)
 				setSearchResults(topResults)
 			} else {
@@ -67,12 +98,7 @@ const MovieSearchForm = ({ onPostCreated }) => {
 		setValue('searchQuery', movie.title)
 
 		// Check for duplicates
-		const duplicates = await checkForDuplicates(movie.title)
-		if (duplicates.length > 0) {
-			setDuplicateWarning(duplicates[0])
-		} else {
-			setDuplicateWarning(null)
-		}
+		await checkForDuplicates(movie)
 	}
 
 	const onSubmit = async (data) => {
@@ -127,7 +153,7 @@ const MovieSearchForm = ({ onPostCreated }) => {
 			{/* Movie Search */}
 			<div>
 				<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
-					SEARCH FOR MOVIE *
+					{prefilledMovie ? 'SELECTED MOVIE' : 'SEARCH FOR MOVIE *'}
 				</label>
 				<div className="relative">
 					<input
@@ -135,26 +161,36 @@ const MovieSearchForm = ({ onPostCreated }) => {
 						{...register('searchQuery', {
 							required: 'Please search and select a movie'
 						})}
-						onChange={(e) => handleMovieSearch(e.target.value)}
-						className="w-full px-4 py-3 pr-12 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all"
-						placeholder="Start typing a movie title..."
+						onChange={(e) => !prefilledMovie && handleMovieSearch(e.target.value)}
+						disabled={!!prefilledMovie}
+						className={`w-full px-4 py-3 pr-12 border-3 border-black font-mono focus:outline-none transition-all ${
+							prefilledMovie 
+								? 'bg-concrete-200 text-concrete-700 cursor-not-allowed' 
+								: 'bg-concrete-50 focus:bg-white focus:shadow-brutal-sm'
+						}`}
+						placeholder={prefilledMovie ? prefilledMovie.title : "Start typing a movie title..."}
 					/>
 					<div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-						{isSearching ? (
+						{!prefilledMovie && isSearching ? (
 							<div className="animate-spin">⟳</div>
 						) : (
 							<Search size={18} className="text-concrete-600" />
 						)}
 					</div>
 				</div>
-				{errors.searchQuery && (
+				{errors.searchQuery && !prefilledMovie && (
 					<p className="mt-1 text-theater-red font-mono text-sm">
 						{errors.searchQuery.message}
 					</p>
 				)}
+				{prefilledMovie && (
+					<p className="mt-1 text-theater-gold font-mono text-sm font-bold">
+						✨ Movie pre-selected from upcoming releases
+					</p>
+				)}
 
 				{/* Search Results */}
-				{searchResults.length > 0 && (
+				{!prefilledMovie && searchResults.length > 0 && (
 					<div className="mt-2 border-3 border-black bg-white max-h-64 overflow-y-auto">
 						{searchResults.map((movie) => (
 							<button
@@ -290,7 +326,7 @@ const MovieSearchForm = ({ onPostCreated }) => {
 			<button
 				type="submit"
 				disabled={isLoading || !selectedMovie}
-				className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-theater-red hover:bg-theater-gold text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+				className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-black hover:bg-gray-800 text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 			>
 				{isLoading ? (
 					'CREATING HYPE CHECK...'

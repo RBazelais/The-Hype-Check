@@ -39,7 +39,7 @@ const SignupForm = ({ onSuccess }) => {
 	}
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 			{/* Display Name Field */}
 			<div>
 				<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
@@ -62,7 +62,7 @@ const SignupForm = ({ onSuccess }) => {
 					placeholder="MovieBuff2024"
 				/>
 				{errors.displayName && (
-					<p className="mt-1 text-theater-red font-mono text-sm">
+					<p className="mt-1 text-red-600 font-mono text-sm">
 						{errors.displayName.message}
 					</p>
 				)}
@@ -86,7 +86,7 @@ const SignupForm = ({ onSuccess }) => {
 					placeholder="your@email.com"
 				/>
 				{errors.email && (
-					<p className="mt-1 text-theater-red font-mono text-sm">
+					<p className="mt-1 text-red-600 font-mono text-sm">
 						{errors.email.message}
 					</p>
 				)}
@@ -119,7 +119,7 @@ const SignupForm = ({ onSuccess }) => {
 					</button>
 				</div>
 				{errors.password && (
-					<p className="mt-1 text-theater-red font-mono text-sm">
+					<p className="mt-1 text-red-600 font-mono text-sm">
 						{errors.password.message}
 					</p>
 				)}
@@ -140,7 +140,7 @@ const SignupForm = ({ onSuccess }) => {
 					placeholder="••••••••"
 				/>
 				{errors.confirmPassword && (
-					<p className="mt-1 text-theater-red font-mono text-sm">
+					<p className="mt-1 text-red-600 font-mono text-sm">
 						{errors.confirmPassword.message}
 					</p>
 				)}
@@ -150,7 +150,7 @@ const SignupForm = ({ onSuccess }) => {
 			<button
 				type="submit"
 				disabled={isLoading}
-				className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-street-yellow hover:bg-street-orange text-black font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+				className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-gray-100 text-black font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 			>
 				{isLoading ? (
 					'CREATING ACCOUNT...'

@@ -36,13 +36,4 @@
 		display: inline;
 		border: 2px solid #000;
 	}
-
-	/* Custom button styles */
-	.btn-brutal {
-		@apply border-3 border-black font-mono font-bold transition-all;
-	}
-
-	.btn-brutal:hover {
-		@apply shadow-none;
-	}
 }

@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { supabaseHelpers } from '../utils/supabase'
+// Using mock helpers for presentation
+import { mockSupabaseHelpers as supabaseHelpers } from '../utils/mockSupabaseHelpers'
 import toast from 'react-hot-toast'
 
 const EditPost = () => {
@@ -262,7 +263,7 @@ const EditPost = () => {
 							<button
 								type="submit"
 								disabled={isSubmitting}
-								className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-theater-red hover:bg-red-700 text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+								className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-black hover:bg-gray-800 text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								{isSubmitting ? (
 									'SAVING CHANGES...'
@@ -276,7 +277,7 @@ const EditPost = () => {
 
 							<Link
 								to={`/post/${id}`}
-								className="flex items-center justify-center gap-2 px-6 py-4 bg-concrete-700 hover:bg-concrete-600 text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all"
+								className="flex items-center justify-center gap-2 px-6 py-4 bg-white hover:bg-gray-100 text-black font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all"
 							>
 								<X size={20} />
 								CANCEL

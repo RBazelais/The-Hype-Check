@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { MessageCircle, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-import { supabaseHelpers } from '../../utils/supabase'
+// Using mock helpers for presentation
+import { mockSupabaseHelpers as supabaseHelpers } from '../../utils/mockSupabaseHelpers'
 import toast from 'react-hot-toast'
 
 const CommentForm = ({ postId, onCommentAdded }) => {
@@ -39,7 +40,7 @@ const CommentForm = ({ postId, onCommentAdded }) => {
 			} else {
 				toast.success('Comment posted!')
 				reset()
-				onCommentAdded?.(newComment[0])
+				onCommentAdded?.(newComment)
 			}
 		} catch (error) {
 			toast.error('Something went wrong')
@@ -117,7 +118,7 @@ const CommentForm = ({ postId, onCommentAdded }) => {
 					<button
 						type="submit"
 						disabled={isSubmitting || !commentText.trim()}
-						className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-theater-red hover:bg-red-700 text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+						className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
 					>
 						{isSubmitting ? (
 							'POSTING...'

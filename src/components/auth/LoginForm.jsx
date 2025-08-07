@@ -97,7 +97,7 @@ const LoginForm = ({ onSuccess }) => {
 			<button
 				type="submit"
 				disabled={isLoading}
-				className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-theater-red hover:bg-theater-gold text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+				className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-black hover:bg-gray-800 text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 			>
 				{isLoading ? (
 					'LOGGING IN...'

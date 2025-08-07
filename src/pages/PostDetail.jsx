@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ThumbsUp, Edit3, Trash2, User, Clock } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../hooks/useAuth'
-import { supabaseHelpers } from '../utils/supabase'
+// Using mock helpers for presentation
+import { mockSupabaseHelpers as supabaseHelpers } from '../utils/mockSupabaseHelpers'
 import TrailerPlayer from '../components/posts/TrailerPlayer'
 import CommentSection from '../components/comments/CommentSection'
 import toast from 'react-hot-toast'
@@ -121,7 +122,7 @@ const PostDetail = () => {
 			<div className="mb-6">
 				<Link
 					to="/"
-					className="inline-flex items-center gap-2 px-4 py-2 bg-concrete-700 hover:bg-concrete-600 text-white font-mono border-3 border-black shadow-brutal-sm hover:shadow-none transition-all"
+					className="inline-flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 text-white font-mono border-3 border-black shadow-brutal-sm hover:shadow-none transition-all"
 				>
 					<ArrowLeft size={16} />
 					BACK TO FEED
@@ -163,7 +164,7 @@ const PostDetail = () => {
 								<button
 									onClick={handleDelete}
 									disabled={deleteMutation.isLoading}
-									className="flex items-center gap-1 px-3 py-2 bg-theater-red hover:bg-red-700 text-white font-mono font-bold border-3 border-black shadow-brutal-sm hover:shadow-none transition-all disabled:opacity-50"
+									className="flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-mono font-bold border-3 border-black shadow-brutal-sm hover:shadow-none transition-all disabled:opacity-50"
 								>
 									<Trash2 size={16} />
 									DELETE
@@ -207,7 +208,7 @@ const PostDetail = () => {
 						<button
 							onClick={handleUpvote}
 							disabled={isUpvoting || !user}
-							className="flex items-center gap-3 px-6 py-4 bg-theater-red hover:bg-red-700 text-white font-mono font-bold border-5 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+							className="flex items-center gap-3 px-6 py-4 bg-red-600 hover:bg-red-700 text-white font-mono font-bold border-5 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							<ThumbsUp size={24} />
 							<span className="text-xl">

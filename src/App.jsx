@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
-import { AuthProvider } from './context/AuthProvider.jsx'
+// Using mock auth for presentation
+import { MockAuthProvider as AuthProvider } from './context/MockAuthProvider.jsx'
 import Header from './components/layout/Header'
 import Home from './pages/Home'
 import CreatePost from './pages/CreatePost'
@@ -35,6 +36,11 @@ function App() {
 								<Route path="/test-search" element={<TestMovieSearch />} />
 								<Route path="/test-trailer" element={<TestTrailer />} />
 								<Route path="/create" element={
+									<ProtectedRoute>
+										<CreatePost />
+									</ProtectedRoute>
+								} />
+								<Route path="/create/:movieId" element={
 									<ProtectedRoute>
 										<CreatePost />
 									</ProtectedRoute>
