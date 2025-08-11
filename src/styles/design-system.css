@@ -1,0 +1,141 @@
+/* Mobile-First Design System for The Hype Check */
+
+/* Custom screen sizes for xs breakpoint */
+@layer utilities {
+  @screen xs {
+    /* Custom extra small breakpoint at 475px */
+  }
+}
+
+/* Component Base Classes - Mobile First */
+@layer components {
+  /* Container Classes */
+  .container-base {
+    @apply w-full mx-auto px-4;
+  }
+  
+  .container-narrow {
+    @apply container-base max-w-2xl;
+  }
+  
+  .container-wide {
+    @apply container-base max-w-4xl;
+  }
+
+  /* Padding & Spacing - Mobile First */
+  .pad-sm {
+    @apply p-4 lg:p-6;
+  }
+  
+  .pad-md {
+    @apply p-4 lg:p-8;
+  }
+  
+  .pad-lg {
+    @apply p-6 lg:p-12;
+  }
+
+  /* Typography - Mobile First */
+  .text-heading-1 {
+    @apply font-brutal text-2xl lg:text-4xl;
+  }
+  
+  .text-heading-2 {
+    @apply font-brutal text-xl lg:text-2xl;
+  }
+  
+  .text-heading-3 {
+    @apply font-brutal text-lg lg:text-xl;
+  }
+  
+  .text-body {
+    @apply font-mono text-sm lg:text-base;
+  }
+  
+  .text-small {
+    @apply font-mono text-xs lg:text-sm;
+  }
+
+  /* Borders - Mobile First */
+  .border-brutal {
+    @apply border-2 lg:border-5 border-black;
+  }
+  
+  .border-brutal-thin {
+    @apply border-2 lg:border-3 border-black;
+  }
+
+  /* Shadows - Mobile First */
+  .shadow-brutal-responsive {
+    @apply shadow-brutal-sm lg:shadow-brutal;
+  }
+
+  /* Buttons - Mobile First */
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-3 lg:px-6 lg:py-4 
+           font-mono font-bold border-brutal-thin shadow-brutal-responsive 
+           hover:shadow-none transition-all text-sm lg:text-base;
+  }
+  
+  .btn-primary {
+    @apply btn-base bg-theater-red hover:bg-red-700 text-white;
+  }
+  
+  .btn-secondary {
+    @apply btn-base bg-concrete-700 hover:bg-concrete-600 text-white;
+  }
+  
+  .btn-accent {
+    @apply btn-base bg-theater-gold hover:bg-street-orange text-black;
+  }
+
+  /* Cards - Mobile First */
+  .card-base {
+    @apply bg-white border-brutal shadow-brutal-responsive;
+  }
+  
+  .card-content {
+    @apply pad-sm;
+  }
+
+  /* Form Elements - Mobile First */
+  .input-base {
+    @apply w-full px-3 py-2 lg:px-4 lg:py-3 bg-concrete-50 border-brutal-thin 
+           font-mono text-sm lg:text-base focus:outline-none focus:bg-white 
+           focus:shadow-brutal-sm transition-all;
+  }
+  
+  .label-base {
+    @apply block font-mono text-xs lg:text-sm font-bold text-concrete-800 mb-2;
+  }
+
+  /* Layout Helpers - Mobile First */
+  .flex-stack {
+    @apply flex flex-col gap-3 lg:gap-4;
+  }
+  
+  .flex-stack-sm {
+    @apply flex flex-col gap-2 lg:gap-3;
+  }
+  
+  .flex-responsive {
+    @apply flex flex-col lg:flex-row gap-3 lg:gap-4;
+  }
+  
+  .grid-responsive {
+    @apply grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6;
+  }
+
+  /* Icon Sizing - Mobile First */
+  .icon-sm {
+    @apply w-4 h-4 lg:w-5 lg:h-5;
+  }
+  
+  .icon-md {
+    @apply w-5 h-5 lg:w-6 lg:h-6;
+  }
+  
+  .icon-lg {
+    @apply w-6 h-6 lg:w-8 lg:h-8;
+  }
+}

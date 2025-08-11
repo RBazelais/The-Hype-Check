@@ -81,13 +81,9 @@ const TrailerLinkForm = ({ onPostCreated }) => {
 				image_url: data.posterUrl?.trim() || null // Matches actual schema
 			}
 			
-			console.log("Submitting trailer post data:", postData);
-			
 			const newPost = await createPostMutation.mutateAsync(postData);
 			
 			toast.success('Hype check created!')
-			
-			console.log("Created post:", newPost);
 				
 			if (newPost?.id) {
 				setTimeout(() => onPostCreated?.(newPost.id), 300);

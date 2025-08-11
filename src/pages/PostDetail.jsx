@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ThumbsUp, Edit3, Trash2, User, Clock } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../hooks/useAuth'
-// Using real Supabase integration
 import { supabaseHelpers } from '../utils/supabase'
 import CommentForm from '../components/comments/CommentForm'
 import TrailerPlayer from '../components/posts/TrailerPlayer'
@@ -31,7 +30,7 @@ const PostDetail = () => {
 	})
 
 	// Fetch comments separately
-	const { data: comments = [], isLoading: commentsLoading } = useQuery({
+	const { data: comments = [] } = useQuery({
 		queryKey: ['comments', id],
 		queryFn: async () => {
 			const { data, error } = await supabaseHelpers.getComments(id)

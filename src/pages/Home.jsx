@@ -12,14 +12,11 @@ import {
 } from "lucide-react";
 // Using hooks instead of direct supabase calls
 import { usePosts } from "../hooks/usePosts";
-import { useAuth } from "../hooks/useAuth";
-import { supabaseHelpers } from "../utils/supabase";
 import { getUpcomingMovies } from "../utils/tmdbApi";
 import PostCard from "../components/posts/PostCard";
 import toast from "react-hot-toast";
 
 const Home = () => {
-	const { user } = useAuth();
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
 	const [sortBy, setSortBy] = useState("created_at");
@@ -39,7 +36,6 @@ const Home = () => {
 		queryFn: async () => {
 			try {
 				const movies = await getUpcomingMovies();
-				console.log('🎬 Fetched upcoming movies count:', movies?.length || 0);
 				return movies || [];
 			} catch (error) {
 				console.error('Failed to fetch upcoming movies:', error);
@@ -61,19 +57,7 @@ const Home = () => {
 			console.error("Movie loading error details:", moviesError);
 			toast.error("Failed to load upcoming movies");
 		}
-		
-		// Debug posts data
-		console.log("🔍 Posts state debug:", {
-			posts,
-			postsType: typeof posts,
-			postsIsArray: Array.isArray(posts),
-			postsLength: posts?.length,
-			isLoading,
-			error: error?.message,
-			searchQuery,
-			sortBy
-		});
-	}, [error, moviesError, posts, isLoading, searchQuery, sortBy]);
+	}, [error, moviesError]);
 	
 	// Add effect to refresh data when component mounts
 	useEffect(() => {
@@ -81,7 +65,6 @@ const Home = () => {
 		const refreshData = async () => {
 			try {
 				// Explicitly refetch the data
-				console.log("Refreshing posts data on component mount");
 				await refetch();
 			} catch (err) {
 				console.error("Error refreshing data:", err);
@@ -93,42 +76,6 @@ const Home = () => {
 
 	const handleSortChange = (newSort) => {
 		setSortBy(newSort);
-	};
-
-	// Test function to create a dummy post
-	const createTestPost = async () => {
-		try {
-			// Check if user is authenticated
-			if (!user) {
-				toast.error("Please log in to create a test post");
-				return;
-			}
-			
-			const testPostData = {
-				title: "Test Post - " + new Date().toLocaleTimeString(),
-				movie_title: "Test Movie",
-				content: "This is a test post to check database connectivity", // Updated from description
-				trailer_url: "https://www.youtube.com/watch?v=test",
-				image_url: null, // Updated from poster_url
-				user_id: user.id // Add required user_id field
-			};
-			
-			console.log("Creating test post with data:", testPostData);
-			
-			const { data, error } = await supabaseHelpers.createPost(testPostData);
-			
-			if (error) {
-				console.error("Test post creation error:", error);
-				toast.error("Test post failed: " + error.message);
-			} else {
-				console.log("Test post created successfully:", data);
-				toast.success("Test post created!");
-				refetch(); // Refresh the posts list
-			}
-		} catch (err) {
-			console.error("Test post exception:", err);
-			toast.error("Test post exception: " + err.message);
-		}
 	};
 
 	const handleMovieClick = (movie) => {
@@ -206,22 +153,6 @@ const Home = () => {
 					</button>
 				</div>
 			</div>
-
-			{/* Debug Output */}
-			{import.meta.env.DEV && (
-				<div className="mb-4 p-4 bg-black text-white text-xs font-mono overflow-auto max-h-40">
-					<details>
-						<summary>Debug: Posts Data</summary>
-						<pre>{JSON.stringify({postsData: posts}, null, 2)}</pre>
-					</details>
-					<button 
-						onClick={createTestPost}
-						className="mt-2 px-4 py-2 bg-red-600 text-white border border-white font-mono text-xs"
-					>
-						CREATE TEST POST
-					</button>
-				</div>
-			)}
 
 			{/* Posts Section */}
 			{posts && Array.isArray(posts) && posts.length > 0 ? (

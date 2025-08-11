@@ -18,31 +18,26 @@ export const AuthProvider = ({ children }) => {
 			}
 			
 			try {
-				console.log('🔒 Fetching profile for user ID:', userId)
-				
 				// Allow the app to proceed while we fetch profile
-				setLoading(false)
+				setLoading(false);
 				
 				// Get the profile from the database
 				const { data, error } = await supabase
 					.from('profiles')
 					.select('*')
 					.eq('id', userId)
-					.single()
+					.single();
 
 				if (error) {
-					console.error('🔒 Profile fetch error:', error)
+					console.error('🔒 Profile fetch error:', error);
 					
 					// If the profile doesn't exist, create a default one
 					if (error.code === 'PGRST116') {
-						console.log('🔒 Profile not found, creating default profile')
-						await createDefaultProfile(userId)
+						await createDefaultProfile(userId);
 					}
 				} else if (data) {
-					console.log('🔒 Profile loaded successfully:', data.display_name)
-					setProfile(data)
+					setProfile(data);
 				} else {
-					console.log('🔒 No profile data found, creating default profile')
 					await createDefaultProfile(userId)
 				}
 			} catch (error) {
@@ -70,8 +65,6 @@ const createDefaultProfile = async (userId) => {
 			updated_at: new Date().toISOString()
 		};
 		
-		console.log('🔒 Creating profile with display name:', displayName);
-		
 		// Try to save to database
 		const { data, error } = await supabase
 			.from('profiles')
@@ -84,8 +77,6 @@ const createDefaultProfile = async (userId) => {
 		
 		if (error) {
 			console.error('🔒 Error creating default profile:', error);
-		} else {
-			console.log('🔒 Default profile created successfully');
 		}
 	} catch (error) {
 		console.error('🔒 Exception in createDefaultProfile:', error);
@@ -100,36 +91,27 @@ const createDefaultProfile = async (userId) => {
 		
 		// Initialize auth and set up listeners in a single function
 		const setupAuth = async () => {
-			console.log('🔒 Setting up authentication...')
-			
 			try {
-				// Get initial session
-				const { data } = await supabase.auth.getSession()
-				const { session } = data
-				
-				if (session?.user) {
-					console.log('🔒 Initial user found:', session.user.id)
-					setUser(session.user)
-					await fetchProfile(session.user.id)
-				} else {
-					console.log('🔒 No initial user found')
-					setUser(null)
-					setLoading(false)
-				}
-			} catch (error) {
-				console.error('🔒 Error in initial auth:', error)
-				setUser(null)
-				setLoading(false)
-			}
+			// Get initial session
+			const { data } = await supabase.auth.getSession();
+			const { session } = data;
 			
-			// Set up auth state change listener
+			if (session?.user) {
+				setUser(session.user);
+				await fetchProfile(session.user.id);
+			} else {
+				setUser(null);
+				setLoading(false);
+			}
+		} catch (error) {
+			console.error('🔒 Error in initial auth:', error);
+			setUser(null);
+			setLoading(false);
+		}			// Set up auth state change listener
 			return supabase.auth.onAuthStateChange(async (event, session) => {
-				console.log('🔒 Auth state change:', event)
-				
 				if (session?.user) {
 					// We have a user
-					console.log('🔒 User session detected:', session.user.id)
-					setUser(session.user)
+					setUser(session.user);
 					
 					// Fetch profile when user signs in
 					if (event === 'SIGNED_IN') {
@@ -137,8 +119,7 @@ const createDefaultProfile = async (userId) => {
 					}
 				} else {
 					// No user - clear all state
-					console.log('🔒 No user session')
-					setUser(null)
+					setUser(null);
 					setProfile(null)
 					setLoading(false)
 				}
@@ -160,8 +141,6 @@ const createDefaultProfile = async (userId) => {
 
 
 	const signUp = async (email, password, displayName) => {
-		console.log('🔒 Signing up with display name:', displayName)
-		
 		try {
 			// Sign up with user metadata including display name
 			const { data, error } = await supabase.auth.signUp({
@@ -203,8 +182,6 @@ const createDefaultProfile = async (userId) => {
 	}
 
 	const signIn = async (email, password) => {
-		console.log('🔒 Signing in with email:', email)
-		
 		try {
 			// Simple sign in approach
 			const { data, error } = await supabase.auth.signInWithPassword({
@@ -228,8 +205,6 @@ const createDefaultProfile = async (userId) => {
 	}
 
 	const signOut = async () => {
-		console.log('🔒 Signing out user...')
-		
 		try {
 			// Clear our local application state first for immediate UI feedback
 			setUser(null)
@@ -238,7 +213,6 @@ const createDefaultProfile = async (userId) => {
 			// Simple approach: try global signout first
 			try {
 				await supabase.auth.signOut({ scope: 'global' })
-				console.log('🔒 Global signout succeeded')
 			} catch (e) {
 				console.error('🔒 Global signout failed:', e)
 				// Try regular signout as fallback

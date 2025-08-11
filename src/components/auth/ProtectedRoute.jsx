@@ -11,16 +11,14 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     // Only trigger the login form if we've finished loading and there's no user
     if (!loading && !user) {
-      console.log('🛡️ Auth complete, no user found - showing login form')
-      setShowLoginForm(true)
+      setShowLoginForm(true);
     }
     
     // If at any point we have a user, ensure login form is hidden
     if (user) {
-      console.log('🛡️ User detected - hiding login form')
-      setShowLoginForm(false)
+      setShowLoginForm(false);
     }
-  }, [loading, user])
+  }, [loading, user]);
   
   // If loading and no user yet, show brief loading state (simple and reliable)
   if (loading && !user) {

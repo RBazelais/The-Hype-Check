@@ -14,14 +14,6 @@ const Header = () => {
     const [authMode, setAuthMode] = useState("login"); // 'login' or 'signup'
     const [searchQuery, setSearchQuery] = useState("");
     
-    // Add more verbose logging to debug profile issues
-    console.log("Header render - Auth state:", { 
-        userObject: user ? `ID: ${user.id}, Email: ${user.email}` : 'No user', 
-        profileObject: profile ? `ID: ${profile.id}, Name: ${profile.display_name}` : 'No profile',
-        userMetadata: user?.user_metadata ? JSON.stringify(user.user_metadata) : 'No metadata',
-        authProvidedDisplayName: profile?.display_name || 'Not available'
-    });
-    
     // Track internal display name state for consistent UI
     const [displayName, setDisplayName] = useState("");
     
@@ -29,12 +21,10 @@ const Header = () => {
     useEffect(() => {
         // If we have a profile with a display name, use that
         if (profile?.display_name) {
-            console.log("Header - Setting display name from profile:", profile.display_name);
             setDisplayName(profile.display_name);
         }
         // If no user or no profile, reset to empty
         else if (!user) {
-            console.log("Header - No user, clearing display name");
             setDisplayName("");
         }
     }, [user, profile]);

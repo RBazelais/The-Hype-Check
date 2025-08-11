@@ -17,8 +17,7 @@ const LoginForm = ({ onSuccess }) => {
 	} = useForm()
 
 	const onSubmit = async (data) => {
-		console.log('LoginForm - Attempting login')
-		setIsLoading(true)
+		setIsLoading(true);
 		
 		// Set a safety timer to prevent UI getting stuck in loading state
 		if (loadingTimerRef.current) {

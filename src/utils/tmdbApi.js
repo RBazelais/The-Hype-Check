@@ -3,11 +3,6 @@ import axios from 'axios'
 const TMDB_BASE_URL = import.meta.env.VITE_TMDB_BASE_URL
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY
 
-console.log('🎬 TMDB API Configuration:')
-console.log('🎬 Base URL:', TMDB_BASE_URL)
-console.log('🎬 API Key present:', !!TMDB_API_KEY)
-console.log('🎬 API Key type:', TMDB_API_KEY ? (TMDB_API_KEY.startsWith('eyJ') ? 'JWT Bearer' : 'Regular API Key') : 'Missing')
-
 // Check if API key is a JWT token (Bearer) or regular API key
 const isJWTToken = TMDB_API_KEY && TMDB_API_KEY.startsWith('eyJ')
 

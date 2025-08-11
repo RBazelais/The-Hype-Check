@@ -47,13 +47,6 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 
 	// Handle prefilled movie data from upcoming movies
 	useEffect(() => {
-		console.log(
-			"🔍 MovieSearchForm - prefilledMovie:",
-			prefilledMovie,
-			"processed:",
-			movieDataProcessed,
-		);
-
 		// Only process prefilled data once to avoid re-processing on re-renders
 		if (prefilledMovie && !movieDataProcessed) {
 			try {
@@ -85,11 +78,6 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 					release_date: prefilledMovie.release_date || "TBA",
 					overview: `Upcoming movie releasing on ${prefilledMovie.release_date || "TBA"}`,
 				};
-
-				console.log(
-					"🔍 Setting selected movie from prefilled data:",
-					movieData,
-				);
 
 				// Set all state at once to reduce renders
 				setSelectedMovie(movieData);
@@ -155,10 +143,6 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 
 								if (bestVideo) {
 									trailerUrl = `https://www.youtube.com/watch?v=${bestVideo.key}`;
-									console.log(
-										"🎬 Found trailer URL for prefilled movie:",
-										trailerUrl,
-									);
 
 									// Populate the trailer URL field
 									setValue("trailerUrl", trailerUrl);
@@ -196,49 +180,31 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 	}, [prefilledMovie, setValue, movieDataProcessed]);
 
 	const handleDuplicateCheck = async (movie) => {
-		if (!movie || !movie.title) {
-			console.log("🔍 No movie title to check for duplicates");
-			setDuplicateWarning(null);
+		if (!movie?.title) {
 			return;
 		}
 
 		try {
-			console.log("🔍 Checking for duplicates with title:", movie.title);
 			const duplicates = await checkForDuplicates(movie.title);
 			
 			if (duplicates && duplicates.length > 0) {
-				console.log("🔍 Found existing posts:", duplicates);
 				setDuplicateWarning(duplicates[0]);
 			} else {
-				console.log("🔍 No duplicate posts found");
 				setDuplicateWarning(null);
 			}
 		} catch (error) {
 			console.error("🔍 Exception checking duplicates:", error);
 			// Don't set duplicate warning if there was an error - better UX to continue
 		}
-	};
-
-	const handleMovieSearch = async (query) => {
+	};	const handleMovieSearch = async (query) => {
 		if (!query || query.length < 2) {
-			console.log("🚫 Search query too short or empty:", {
-				query,
-				length: query?.length,
-			});
 			setSearchResults([]);
 			return;
 		}
 
-		console.log("🔎 Starting movie search for:", query);
 		setIsSearching(true);
 		try {
 			const results = await searchMovies(query);
-			console.log("✅ Search results received in component:", {
-				results,
-				resultsType: typeof results,
-				isArray: Array.isArray(results),
-				length: results?.length,
-			});
 
 			// Handle the API response format - results come wrapped in a results property
 			const movieResults = results?.results || results;
@@ -249,10 +215,8 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 				movieResults.length > 0
 			) {
 				const topResults = movieResults.slice(0, 5);
-				console.log("🎬 Setting top 5 search results:", topResults);
 				setSearchResults(topResults);
 			} else {
-				console.log("❌ No valid results found, setting empty array");
 				setSearchResults([]);
 			}
 		} catch (error) {
@@ -260,7 +224,6 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 			toast.error("Failed to search movies");
 			setSearchResults([]);
 		} finally {
-			console.log("🏁 Search completed, setting isSearching to false");
 			setIsSearching(false);
 		}
 	};
@@ -283,14 +246,8 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 		}, 10000); // 10 second safety timeout
 
 		try {
-			console.log(
-				"🎬 Fetching detailed movie info with trailers for:",
-				movie.id,
-			);
-
 			// Fetch detailed movie info including videos
 			const detailedMovie = await getMovieDetails(movie.id);
-			console.log("🎬 Detailed movie data received:", detailedMovie);
 
 			// Extract trailer information
 			let trailerUrl = null;
@@ -302,22 +259,12 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 				detailedMovie.videos.results &&
 				detailedMovie.videos.results.length > 0
 			) {
-				console.log(
-					"🎬 Found videos:",
-					detailedMovie.videos.results.length,
-				);
-
 				// Find official trailer or teaser
 				const trailers = detailedMovie.videos.results.filter(
 					(video) =>
 						video.site === "YouTube" &&
 						(video.type === "Trailer" || video.type === "Teaser") &&
 						video.official,
-				);
-
-				console.log(
-					"🎬 Filtered official YouTube trailers/teasers:",
-					trailers.length,
 				);
 
 				// Prioritize official trailers over teasers
@@ -346,11 +293,6 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 					trailerType = bestVideo.type;
 					trailerFound = true;
 
-					console.log(
-						`🎬 Found ${bestVideo.official ? "official" : "unofficial"} ${trailerType}:`,
-						trailerUrl,
-					);
-
 					// Automatically populate the trailer URL field
 					setValue("trailerUrl", trailerUrl);
 
@@ -363,13 +305,10 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 						},
 					);
 				} else {
-					console.log("🎬 No suitable trailers or teasers found");
 					toast.error("No trailer available for this movie", {
 						duration: 2000,
 					});
 				}
-			} else {
-				console.log("🎬 No videos found for this movie");
 			}
 
 			// Process available videos for display
@@ -473,14 +412,9 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 				trailer_url: data.trailerUrl?.trim() || null,
 				content: data.content.trim() // Required and validated - matches actual schema
 			};
-			
-			console.log("Submitting post data:", postData);
 
 			// Create the post using the mutation
 			const newPost = await createPostMutation.mutateAsync(postData);
-			
-			// Handle successful creation
-			console.log("Created post:", newPost);
 			
 			if (newPost?.id) {
 				toast.success("Hype check created!");
@@ -605,10 +539,6 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 								alt={selectedMovie.title}
 								className="w-16 h-24 object-cover border-3 border-black"
 								onError={(e) => {
-									console.log(
-										"🔍 Selected movie poster failed to load:",
-										e.target.src,
-									);
 									e.target.style.opacity = "0.5";
 								}}
 							/>
