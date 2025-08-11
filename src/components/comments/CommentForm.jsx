@@ -16,10 +16,31 @@ const CommentForm = ({ postId, onCommentAdded }) => {
 		handleSubmit,
 		reset,
 		watch,
+		setValue,
 		formState: { errors }
 	} = useForm()
 
 	const commentText = watch('content', '')
+
+	// Auto-complete spoiler tags
+	const handleTextareaChange = (e) => {
+		const value = e.target.value
+		const cursorPosition = e.target.selectionStart
+		
+		// Check if user just typed "[spoiler]"
+		if (value.endsWith('[spoiler]') && !value.includes('[/spoiler]')) {
+			// Add the closing tag and position cursor between tags
+			const newValue = value + '[/spoiler]'
+			setValue('content', newValue)
+			
+			// Set cursor position between the tags on next tick
+			setTimeout(() => {
+				e.target.setSelectionRange(cursorPosition, cursorPosition)
+			}, 0)
+		} else {
+			setValue('content', value)
+		}
+	}
 
 	const onSubmit = async (data) => {
 		if (!user) return
@@ -78,6 +99,7 @@ const CommentForm = ({ postId, onCommentAdded }) => {
 									message: 'Comment must be less than 1000 characters'
 								}
 							})}
+							onChange={handleTextareaChange}
 							rows={4}
 							className="w-full px-4 py-3 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all resize-none"
 							placeholder="Share your thoughts... Use [spoiler]text[/spoiler] to hide spoilers"

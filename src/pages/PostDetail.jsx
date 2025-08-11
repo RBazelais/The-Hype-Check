@@ -30,6 +30,17 @@ const PostDetail = () => {
 		enabled: !!id
 	})
 
+	// Fetch comments separately
+	const { data: comments = [], isLoading: commentsLoading } = useQuery({
+		queryKey: ['comments', id],
+		queryFn: async () => {
+			const { data, error } = await supabaseHelpers.getComments(id)
+			if (error) throw error
+			return data
+		},
+		enabled: !!id
+	})
+
 	// Upvote mutation
 	const upvoteMutation = useMutation({
 		mutationFn: async () => {
@@ -242,11 +253,11 @@ const PostDetail = () => {
 			<div className="bg-concrete-100 border-5 border-black shadow-brutal">
 				<div className="p-6">
 					<h2 className="font-brutal text-2xl text-concrete-900 mb-6">
-						DISCUSSION ({post.comments?.length || 0})
+						DISCUSSION ({comments?.length || 0})
 					</h2>
 					<CommentSection 
 						postId={id} 
-						comments={post.comments || []} 
+						comments={comments || []} 
 					/>
 				</div>
 			</div>

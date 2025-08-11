@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Plus, AlertTriangle, ExternalLink } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-import { supabaseHelpers } from '../../utils/supabase'
-import { checkForDuplicates } from '../../utils/duplicateDetection'
+import { useCreatePost } from '../../hooks/usePosts'
+import { generatePostTitle } from "../../utils/titleUtils.js"
+import { checkForDuplicates } from '../../utils/duplicateDetection.js'
 import toast from 'react-hot-toast'
 
 const TrailerLinkForm = ({ onPostCreated }) => {
 	const { user } = useAuth()
+	const createPostMutation = useCreatePost()
 	const [isLoading, setIsLoading] = useState(false)
 	const [duplicateWarning, setDuplicateWarning] = useState(null)
 	
@@ -24,10 +26,15 @@ const TrailerLinkForm = ({ onPostCreated }) => {
 	// Check for duplicates when movie title changes
 	const handleTitleChange = async (title) => {
 		if (title && title.length > 2) {
-			const duplicates = await checkForDuplicates(title)
-			if (duplicates.length > 0) {
-				setDuplicateWarning(duplicates[0])
-			} else {
+			try {
+				const duplicates = await checkForDuplicates(title)
+				if (duplicates.length > 0) {
+					setDuplicateWarning(duplicates[0])
+				} else {
+					setDuplicateWarning(null)
+				}
+			} catch (error) {
+				console.error('Duplicate check exception:', error)
 				setDuplicateWarning(null)
 			}
 		} else {
@@ -36,32 +43,62 @@ const TrailerLinkForm = ({ onPostCreated }) => {
 	}
 
 	const onSubmit = async (data) => {
+		// Validate required fields
+		if (!data.movieTitle || !data.movieTitle.trim()) {
+			toast.error("Movie title is required");
+			return;
+		}
+
+		if (!data.content || !data.content.trim()) {
+			toast.error("Please provide your reaction to the trailer");
+			return;
+		}
+
+		if (!data.trailerUrl || !data.trailerUrl.trim()) {
+			toast.error("Trailer URL is required");
+			return;
+		}
+
+		// Check authentication
+		if (!user?.id) {
+			toast.error("Please log in to create a post");
+			return;
+		}
+
 		setIsLoading(true)
+		const loadingToast = toast.loading("Creating hype check...")
+		
 		try {
-			// Create the post
+			// Create post data with database schema field names
+			const defaultTitle = generatePostTitle(data.movieTitle.trim());
+				
 			const postData = {
 				user_id: user.id,
-				title: data.title || `${data.movieTitle} - First Impressions`,
-				content: data.content || null,
-				image_url: data.posterUrl || null,
-				trailer_url: data.trailerUrl,
-				movie_title: data.movieTitle,
-				upvotes: 0
+				title: data.title?.trim() || defaultTitle,
+				movie_title: data.movieTitle.trim(), // Required
+				trailer_url: data.trailerUrl.trim(),
+				content: data.content.trim(), // Required - matches actual schema
+				image_url: data.posterUrl?.trim() || null // Matches actual schema
 			}
-
-			const { data: newPost, error } = await supabaseHelpers.createPost(postData)
 			
-			if (error) {
-				toast.error('Failed to create post')
-				console.error('Error creating post:', error)
+			console.log("Submitting trailer post data:", postData);
+			
+			const newPost = await createPostMutation.mutateAsync(postData);
+			
+			toast.success('Hype check created!')
+			
+			console.log("Created post:", newPost);
+				
+			if (newPost?.id) {
+				setTimeout(() => onPostCreated?.(newPost.id), 300);
 			} else {
-				toast.success('Hype check created!')
-				onPostCreated?.(newPost[0].id)
+				toast.error("Post created but missing ID. Please check your posts.");
 			}
-		} catch (error) {
-			toast.error('Something went wrong')
-			console.error('Error:', error)
+		} catch (err) {
+			console.error('Error creating post:', err)
+			toast.error('Something went wrong: ' + (err.message || 'Unknown error'))
 		} finally {
+			toast.dismiss(loadingToast)
 			setIsLoading(false)
 		}
 	}
@@ -240,17 +277,24 @@ const TrailerLinkForm = ({ onPostCreated }) => {
 				</p>
 			</div>
 
-			{/* Your Reaction (Optional) */}
+			{/* Your Reaction (Required) */}
 			<div>
 				<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
-					YOUR REACTION (OPTIONAL)
+					YOUR REACTION *
 				</label>
 				<textarea
-					{...register('content')}
+					{...register('content', {
+						required: "Please share your thoughts about this trailer"
+					})}
 					rows={4}
 					className="w-full px-4 py-3 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all resize-none"
 					placeholder="What did you think of the trailer? Excited? Skeptical? Share your first impressions..."
 				/>
+				{errors.content && (
+					<p className="mt-1 text-theater-red font-mono text-sm">
+						{errors.content.message}
+					</p>
+				)}
 				<p className="mt-2 text-xs font-mono text-concrete-600">
 					Your initial thoughts about the trailer
 				</p>
@@ -259,18 +303,25 @@ const TrailerLinkForm = ({ onPostCreated }) => {
 			{/* Submit Button */}
 			<button
 				type="submit"
-				disabled={isLoading}
-				className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-theater-red hover:bg-theater-gold text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+				disabled={isLoading || !user}
+				className={`w-full flex items-center justify-center gap-2 px-6 py-4 ${
+					user ? "bg-theater-red hover:bg-theater-gold" : "bg-concrete-400"
+				} text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
 			>
 				{isLoading ? (
-					'CREATING HYPE CHECK...'
+					'CREATING HYPE...'
 				) : (
 					<>
 						<Plus size={20} />
-						CREATE HYPE CHECK
+						{user ? "CREATE NEW HYPE" : "LOGIN TO CREATE POST"}
 					</>
 				)}
 			</button>
+			{!user && (
+				<p className="mt-2 text-center font-mono text-sm text-theater-red">
+					You need to be logged in to create a post
+				</p>
+			)}
 		</form>
 	)
 }

@@ -81,7 +81,7 @@ const Comment = ({ comment, onCommentUpdated, onCommentDeleted }) => {
 			<div className="flex justify-between items-start mb-4">
 				<div>
 					<h4 className="font-brutal text-lg text-concrete-800">
-						{comment.profiles?.display_name || 'Anonymous User'}
+						{comment.profiles?.display_name || comment.profiles?.username || 'Anonymous User'}
 					</h4>
 					<p className="font-mono text-sm text-concrete-600">
 						{formatDate(comment.created_at)}

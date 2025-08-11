@@ -13,19 +13,50 @@ const Header = () => {
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [authMode, setAuthMode] = useState("login"); // 'login' or 'signup'
     const [searchQuery, setSearchQuery] = useState("");
+    
+    // Add more verbose logging to debug profile issues
+    console.log("Header render - Auth state:", { 
+        userObject: user ? `ID: ${user.id}, Email: ${user.email}` : 'No user', 
+        profileObject: profile ? `ID: ${profile.id}, Name: ${profile.display_name}` : 'No profile',
+        userMetadata: user?.user_metadata ? JSON.stringify(user.user_metadata) : 'No metadata',
+        authProvidedDisplayName: profile?.display_name || 'Not available'
+    });
+    
+    // Track internal display name state for consistent UI
+    const [displayName, setDisplayName] = useState("");
+    
+    // Add effect to track display name from profile
+    useEffect(() => {
+        // If we have a profile with a display name, use that
+        if (profile?.display_name) {
+            console.log("Header - Setting display name from profile:", profile.display_name);
+            setDisplayName(profile.display_name);
+        }
+        // If no user or no profile, reset to empty
+        else if (!user) {
+            console.log("Header - No user, clearing display name");
+            setDisplayName("");
+        }
+    }, [user, profile]);
 
     const handleSignOut = async () => {
+        // Show loading toast
+        const loadingToast = toast.loading("Signing out...");
+        
         try {
-            const { error } = await signOut();
-            if (error) {
-                toast.error("Error signing out");
-            } else {
-                toast.success("Signed out successfully");
-                // Navigate to home instead of hard refresh
-                navigate('/');
-            }
-        } catch (err) { // eslint-disable-line no-unused-vars
+            // Simply call the signOut function - it handles page redirection
+            await signOut();
+            toast.dismiss(loadingToast);
+            toast.success("Signed out successfully");
+        } catch (err) {
+            console.error("Header - Sign out error:", err);
+            toast.dismiss(loadingToast);
             toast.error("Something went wrong during logout");
+            
+            // Force reload as a fallback
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
         }
     };
 
@@ -60,14 +91,14 @@ const Header = () => {
 
     return (
         <>
-            <header className="bg-gray-900 border-b-4 border-black">
-                <div className="container mx-auto px-4 py-4">
-                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                        {/* Top row: Logo and Nav (on mobile) */}
-                        <div className="flex items-center justify-between">
+            <header className="w-full bg-gray-900 border-b-4 border-black">
+                <div className="w-full px-4 py-4">
+                    <div className="flex flex-col gap-4">
+                        {/* Top row: Logo and Nav */}
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             {/* Logo */}
                             <Link to="/" className="group flex-shrink-0">
-                                <h1 className="font-bold text-2xl md:text-3xl text-yellow-400 hover:text-yellow-300 transition-colors">
+                                <h1 className="font-bold text-xl sm:text-2xl lg:text-3xl text-yellow-400 hover:text-yellow-300 transition-colors">
                                     THE HYPE CHECK
                                 </h1>
                                 <div className="font-mono text-xs text-gray-300 group-hover:text-gray-100 transition-colors">
@@ -75,36 +106,43 @@ const Header = () => {
                                 </div>
                             </Link>
 
-                            {/* Mobile Navigation */}
-                            <nav className="flex lg:hidden items-center gap-2">
+                            {/* Navigation */}
+                            <nav className="flex items-center justify-between lg:justify-end gap-2">
                                 {user ? (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 sm:gap-2 w-full lg:w-auto">
+                                        <span className="font-mono text-xs text-gray-100 mr-1 hidden md:inline flex-shrink-0">
+                                            {profile?.display_name || displayName || "Anonymous User"}
+                                        </span>
                                         <Link
                                             to="/create"
-                                            className="flex items-center gap-1 px-3 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-mono font-bold border-2 border-black text-sm transition-all"
+                                            className="flex items-center gap-1 px-2 sm:px-3 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-mono font-bold border-2 border-black text-xs sm:text-sm transition-all flex-shrink-0"
                                         >
-                                            <Plus size={16} />
+                                            <Plus size={14} className="sm:hidden" />
+                                            <Plus size={16} className="hidden sm:inline" />
                                             <span className="hidden sm:inline">NEW HYPE</span>
                                         </Link>
                                         <button
                                             onClick={handleSignOut}
-                                            className="flex items-center gap-1 px-2 py-2 bg-gray-700 hover:bg-red-600 text-gray-100 hover:text-white font-mono border-2 border-black text-sm transition-colors"
+                                            className="flex items-center gap-1 px-2 py-2 bg-gray-700 hover:bg-red-600 text-gray-100 hover:text-white font-mono border-2 border-black text-xs sm:text-sm transition-colors flex-shrink-0"
                                         >
-                                            <LogOut size={16} />
+                                            <LogOut size={14} className="sm:hidden" />
+                                            <LogOut size={16} className="hidden sm:inline" />
+                                            <span className="hidden md:inline">OUT</span>
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-1 sm:gap-2 w-full lg:w-auto justify-end">
                                         <button
                                             onClick={() => openAuthModal("login")}
-                                            className="flex items-center gap-1 px-3 py-2 bg-black hover:bg-gray-800 text-white font-mono font-bold border-2 border-black text-sm transition-all"
+                                            className="flex items-center gap-1 px-2 sm:px-3 py-2 bg-black hover:bg-gray-800 text-white font-mono font-bold border-2 border-black text-xs sm:text-sm transition-all flex-shrink-0"
                                         >
-                                            <LogIn size={16} />
+                                            <LogIn size={14} className="sm:hidden" />
+                                            <LogIn size={16} className="hidden sm:inline" />
                                             <span className="hidden sm:inline">LOGIN</span>
                                         </button>
                                         <button
                                             onClick={() => openAuthModal("signup")}
-                                            className="px-3 py-2 bg-white hover:bg-gray-100 text-black font-mono border-2 border-black text-sm transition-colors"
+                                            className="px-2 sm:px-3 py-2 bg-white hover:bg-gray-100 text-black font-mono border-2 border-black text-xs sm:text-sm transition-colors flex-shrink-0"
                                         >
                                             <span className="hidden sm:inline">SIGN UP</span>
                                             <span className="sm:hidden">JOIN</span>
@@ -114,78 +152,30 @@ const Header = () => {
                             </nav>
                         </div>
 
-                        {/* Second row: Search Bar and Desktop Navigation */}
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-1">
-                            {/* Search Bar */}
-                            <form
-                                onSubmit={handleSearch}
-                                className="flex-1 lg:max-w-md lg:mx-8 min-w-0"
-                            >
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) =>
-                                            setSearchQuery(e.target.value)
-                                        }
-                                        placeholder="FIND DISCUSSIONS..."
-                                        className="w-full min-w-48 px-4 py-3 bg-gray-100 border-2 border-black font-mono text-sm text-black placeholder-gray-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all"
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="absolute right-0 top-0 h-full px-4 bg-red-600 hover:bg-red-700 text-white border-l-2 border-black transition-colors"
-                                    >
-                                        <Search size={18} />
-                                    </button>
-                                </div>
-                            </form>
-
-                            {/* Desktop Navigation */}
-                            <nav className="hidden lg:flex items-center gap-4 flex-shrink-0">
-                                {user ? (
-                                    <>
-                                        <Link
-                                            to="/create"
-                                            className="flex items-center gap-2 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-mono font-bold border-2 border-black transition-all"
-                                        >
-                                            <Plus size={18} />
-                                            NEW HYPE
-                                        </Link>
-
-                                        <div className="flex items-center gap-2 text-gray-100">
-                                            <User size={18} />
-                                            <span className="font-mono text-sm">
-                                                {profile?.display_name || "User"}
-                                            </span>
-                                        </div>
-
-                                        <button
-                                            onClick={handleSignOut}
-                                            className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-red-600 text-gray-100 hover:text-white font-mono border-2 border-black transition-colors"
-                                        >
-                                            <LogOut size={16} />
-                                            SIGNOUT
-                                        </button>
-                                    </>
-                                ) : (
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => openAuthModal("login")}
-                                            className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 text-white font-mono font-bold border-2 border-black transition-all"
-                                        >
-                                            <LogIn size={18} />
-                                            LOGIN
-                                        </button>
-                                        <button
-                                            onClick={() => openAuthModal("signup")}
-                                            className="px-4 py-2 bg-white hover:bg-gray-100 text-black font-mono border-2 border-black transition-colors"
-                                        >
-                                            SIGN UP
-                                        </button>
-                                    </div>
-                                )}
-                            </nav>
-                        </div>
+                        {/* Search Bar - Always below other elements */}
+                        <form
+                            onSubmit={handleSearch}
+                            className="w-full max-w-none lg:max-w-2xl lg:mx-auto"
+                        >
+                            <div className="relative flex w-full">
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
+                                    placeholder="FIND DISCUSSIONS..."
+                                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 border-2 border-black font-mono text-xs sm:text-sm text-black placeholder-gray-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all"
+                                />
+                                <button
+                                    type="submit"
+                                    className="px-3 sm:px-4 bg-red-600 hover:bg-red-700 text-white border-2 border-l-0 border-black transition-colors flex-shrink-0"
+                                >
+                                    <Search size={16} className="sm:hidden" />
+                                    <Search size={18} className="hidden sm:inline" />
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </header>

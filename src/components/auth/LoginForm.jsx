@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
@@ -8,6 +8,7 @@ const LoginForm = ({ onSuccess }) => {
 	const { signIn } = useAuth()
 	const [showPassword, setShowPassword] = useState(false)
 	const [isLoading, setIsLoading] = useState(false)
+	const loadingTimerRef = useRef(null)
 
 	const {
 		register,
@@ -16,20 +17,36 @@ const LoginForm = ({ onSuccess }) => {
 	} = useForm()
 
 	const onSubmit = async (data) => {
+		console.log('LoginForm - Attempting login')
 		setIsLoading(true)
+		
+		// Set a safety timer to prevent UI getting stuck in loading state
+		if (loadingTimerRef.current) {
+			clearTimeout(loadingTimerRef.current);
+		}
+		
+		loadingTimerRef.current = setTimeout(() => {
+			setIsLoading(false);
+		}, 5000); // 5 second safety timeout
+		
 		try {
+			// Call the simplified signIn function
 			const { error } = await signIn(data.email, data.password)
 
 			if (error) {
-				toast.error(error.message)
+				toast.error('Login failed: ' + (error.message || 'Please check your credentials'))
 			} else {
 				toast.success('Welcome back!')
 				onSuccess?.()
 			}
-		} catch (err) {
-			console.error('Login error:', err)
+		} catch (error) {
+			console.error('Login exception:', error)
 			toast.error('Login failed')
 		} finally {
+			// Always clear timer and loading state
+			if (loadingTimerRef.current) {
+				clearTimeout(loadingTimerRef.current);
+			}
 			setIsLoading(false)
 		}
 	}

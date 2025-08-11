@@ -104,8 +104,8 @@ const EditPost = () => {
 
 	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center min-h-64">
-				<div className="bg-theater-red text-white px-12 py-6 border-5 border-black font-brutal text-2xl shadow-brutal">
+			<div className="flex items-center justify-center min-h-64 px-4">
+				<div className="bg-theater-red text-white px-6 py-4 lg:px-12 lg:py-6 border-2 lg:border-5 border-black font-brutal text-xl lg:text-2xl shadow-brutal-sm lg:shadow-brutal">
 					LOADING EDITOR...
 				</div>
 			</div>
@@ -114,20 +114,21 @@ const EditPost = () => {
 
 	if (error || !post) {
 		return (
-			<div className="max-w-4xl mx-auto text-center py-16">
-				<div className="bg-concrete-800 border-5 border-black p-12 inline-block shadow-brutal">
-					<h2 className="font-brutal text-3xl text-white mb-4">
+			<div className="w-full max-w-4xl mx-auto text-center py-8 lg:py-16 px-4">
+				<div className="bg-concrete-800 border-2 lg:border-5 border-black p-6 lg:p-12 inline-block shadow-brutal-sm lg:shadow-brutal">
+					<h2 className="font-brutal text-2xl lg:text-3xl text-white mb-4">
 						POST NOT FOUND
 					</h2>
-					<p className="font-mono text-theater-gold text-lg mb-6">
+					<p className="font-mono text-theater-gold text-sm lg:text-lg mb-6">
 						This post might have been deleted or you don't have permission
 					</p>
 					<Link
 						to="/"
-						className="inline-flex items-center gap-2 px-6 py-3 bg-street-yellow hover:bg-street-orange text-black font-mono font-bold border-5 border-black shadow-brutal hover:shadow-none transition-all"
+						className="inline-flex items-center gap-2 px-4 py-3 lg:px-6 lg:py-3 bg-street-yellow hover:bg-street-orange text-black font-mono font-bold border-2 lg:border-5 border-black shadow-brutal-sm lg:shadow-brutal hover:shadow-none transition-all text-sm lg:text-base"
 					>
-						<ArrowLeft size={18} />
-						BACK TO FEED
+						<ArrowLeft className="w-4 h-4 lg:w-[18px] lg:h-[18px]" />
+						<span className="hidden xs:inline">BACK TO FEED</span>
+						<span className="xs:hidden">BACK</span>
 					</Link>
 				</div>
 			</div>
@@ -135,36 +136,37 @@ const EditPost = () => {
 	}
 
 	return (
-		<div className="max-w-2xl mx-auto">
+		<div className="w-full max-w-2xl mx-auto px-4 lg:px-8">
 			{/* Header */}
-			<div className="mb-8">
+			<div className="mb-6 lg:mb-8">
 				<div className="flex items-center justify-between mb-4">
 					<Link
-						to={`/post/${id}`}
-						className="inline-flex items-center gap-2 px-4 py-2 bg-concrete-700 hover:bg-concrete-600 text-white font-mono border-3 border-black shadow-brutal-sm hover:shadow-none transition-all"
+						to="/"
+						className="inline-flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2 bg-theater-red hover:bg-red-700 text-white font-mono font-bold border-2 lg:border-3 border-black shadow-brutal-sm lg:shadow-brutal hover:shadow-none transition-all text-sm lg:text-base"
 					>
-						<ArrowLeft size={16} />
-						BACK TO POST
+						<ArrowLeft className="w-4 h-4" />
+						<span className="hidden xs:inline">BACK TO FEED</span>
+						<span className="xs:hidden">BACK</span>
 					</Link>
 				</div>
 
-				<h1 className="font-brutal text-4xl text-concrete-900 mb-2">
+				<h1 className="font-brutal text-2xl lg:text-4xl text-concrete-900 mb-2">
 					EDIT HYPE CHECK
 				</h1>
-				<p className="font-mono text-concrete-600">
+				<p className="font-mono text-sm lg:text-base text-concrete-600">
 					Update your thoughts about {post.movie_title}
 				</p>
 			</div>
 
 			{/* Movie Info Banner */}
-			<div className="bg-theater-gold border-5 border-black p-6 mb-8 shadow-brutal">
+			<div className="bg-theater-gold border-2 lg:border-5 border-black p-4 lg:p-6 mb-6 lg:mb-8 shadow-brutal-sm lg:shadow-brutal">
 				<div className="flex items-center gap-3">
-					<span className="text-2xl">🎬</span>
-					<div>
-						<h2 className="font-brutal text-xl text-black">
+					<span className="text-xl lg:text-2xl">🎬</span>
+					<div className="min-w-0 flex-1">
+						<h2 className="font-brutal text-lg lg:text-xl text-black truncate">
 							{post.movie_title}
 						</h2>
-						<p className="font-mono text-sm text-concrete-800">
+						<p className="font-mono text-xs lg:text-sm text-concrete-800">
 							Originally posted {new Date(post.created_at).toLocaleDateString()}
 						</p>
 					</div>
@@ -172,12 +174,12 @@ const EditPost = () => {
 			</div>
 
 			{/* Edit Form */}
-			<div className="bg-white border-5 border-black shadow-brutal">
-				<div className="p-8">
-					<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+			<div className="bg-white border-2 lg:border-5 border-black shadow-brutal-sm lg:shadow-brutal">
+				<div className="p-4 lg:p-8">
+					<form onSubmit={handleSubmit(onSubmit)} className="space-y-4 lg:space-y-6">
 						{/* Post Title */}
 						<div>
-							<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
+							<label className="block font-mono text-xs lg:text-sm font-bold text-concrete-800 mb-2">
 								POST TITLE *
 							</label>
 							<input
@@ -193,11 +195,11 @@ const EditPost = () => {
 										message: 'Title must be less than 200 characters'
 									}
 								})}
-								className="w-full px-4 py-3 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all"
+								className="w-full min-w-0 px-3 py-2 lg:px-4 lg:py-3 bg-concrete-50 border-2 lg:border-3 border-black font-mono text-sm lg:text-base focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all"
 								placeholder="Your take on this movie..."
 							/>
 							{errors.title && (
-								<p className="mt-1 text-theater-red font-mono text-sm">
+								<p className="mt-1 text-theater-red font-mono text-xs lg:text-sm">
 									{errors.title.message}
 								</p>
 							)}
@@ -205,13 +207,13 @@ const EditPost = () => {
 
 						{/* Post Content */}
 						<div>
-							<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
+							<label className="block font-mono text-xs lg:text-sm font-bold text-concrete-800 mb-2">
 								YOUR UPDATED THOUGHTS
 							</label>
 							<textarea
 								{...register('content')}
-								rows={6}
-								className="w-full px-4 py-3 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all resize-none"
+								rows={4}
+								className="w-full min-w-0 px-3 py-2 lg:px-4 lg:py-3 bg-concrete-50 border-2 lg:border-3 border-black font-mono text-sm lg:text-base focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all resize-none"
 								placeholder="Share your updated thoughts about this movie..."
 							/>
 							<p className="mt-2 text-xs font-mono text-concrete-600">
@@ -221,7 +223,7 @@ const EditPost = () => {
 
 						{/* Trailer URL */}
 						<div>
-							<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
+							<label className="block font-mono text-xs lg:text-sm font-bold text-concrete-800 mb-2">
 								TRAILER URL
 							</label>
 							<input
@@ -229,11 +231,11 @@ const EditPost = () => {
 								{...register('trailer_url', {
 									validate: validateTrailerUrl
 								})}
-								className="w-full px-4 py-3 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all"
+								className="w-full min-w-0 px-3 py-2 lg:px-4 lg:py-3 bg-concrete-50 border-2 lg:border-3 border-black font-mono text-sm lg:text-base focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all"
 								placeholder="https://www.youtube.com/watch?v=..."
 							/>
 							{errors.trailer_url && (
-								<p className="mt-1 text-theater-red font-mono text-sm">
+								<p className="mt-1 text-theater-red font-mono text-xs lg:text-sm">
 									{errors.trailer_url.message}
 								</p>
 							)}
@@ -244,13 +246,13 @@ const EditPost = () => {
 
 						{/* Poster URL */}
 						<div>
-							<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
+							<label className="block font-mono text-xs lg:text-sm font-bold text-concrete-800 mb-2">
 								MOVIE POSTER URL
 							</label>
 							<input
 								type="url"
 								{...register('image_url')}
-								className="w-full px-4 py-3 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all"
+								className="w-full min-w-0 px-3 py-2 lg:px-4 lg:py-3 bg-concrete-50 border-2 lg:border-3 border-black font-mono text-sm lg:text-base focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all"
 								placeholder="https://image.tmdb.org/t/p/w500/..."
 							/>
 							<p className="mt-2 text-xs font-mono text-concrete-600">
@@ -259,28 +261,30 @@ const EditPost = () => {
 						</div>
 
 						{/* Action Buttons */}
-						<div className="flex gap-4 pt-6 border-t-3 border-concrete-300">
+						<div className="flex flex-col lg:flex-row gap-3 lg:gap-4 pt-4 lg:pt-6 border-t-2 lg:border-t-3 border-concrete-300">
 							<button
 								type="submit"
 								disabled={isSubmitting}
-								className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-black hover:bg-gray-800 text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+								className="w-full lg:flex-1 flex items-center justify-center gap-2 px-4 py-3 lg:px-6 lg:py-4 bg-theater-red hover:bg-red-700 text-white font-mono font-bold border-2 lg:border-3 border-black shadow-brutal-sm lg:shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
 							>
 								{isSubmitting ? (
 									'SAVING CHANGES...'
 								) : (
 									<>
-										<Save size={20} />
-										SAVE CHANGES
+										<Save className="w-4 h-4 lg:w-5 lg:h-5" />
+										<span className="hidden xs:inline">SAVE CHANGES</span>
+										<span className="xs:hidden">SAVE</span>
 									</>
 								)}
 							</button>
 
 							<Link
-								to={`/post/${id}`}
-								className="flex items-center justify-center gap-2 px-6 py-4 bg-white hover:bg-gray-100 text-black font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all"
+								to="/"
+								className="w-full lg:w-auto flex items-center justify-center gap-2 px-4 py-3 lg:px-6 lg:py-4 bg-concrete-700 hover:bg-concrete-600 text-white font-mono font-bold border-2 lg:border-3 border-black shadow-brutal-sm lg:shadow-brutal hover:shadow-none transition-all text-sm lg:text-base"
 							>
-								<X size={20} />
-								CANCEL
+								<X className="w-4 h-4 lg:w-5 lg:h-5" />
+								<span className="hidden xs:inline">CANCEL</span>
+								<span className="xs:hidden">×</span>
 							</Link>
 						</div>
 					</form>

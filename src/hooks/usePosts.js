@@ -8,12 +8,17 @@ export const usePosts = (sortBy = 'created_at', searchQuery = '') => {
 	return useQuery({
 		queryKey: ['posts', sortBy, searchQuery],
 		queryFn: async () => {
+			console.log('🔍 usePosts query running with:', { sortBy, searchQuery });
 			if (searchQuery) {
+				console.log('🔍 Searching posts with query:', searchQuery);
 				const { data, error } = await supabaseHelpers.searchPosts(searchQuery)
+				console.log('🔍 Search result:', { data, error });
 				if (error) throw error
 				return data
 			} else {
+				console.log('🔍 Getting all posts with sortBy:', sortBy);
 				const { data, error } = await supabaseHelpers.getPosts(sortBy)
+				console.log('🔍 GetPosts result:', { data, error, dataType: typeof data, dataLength: data?.length });
 				if (error) throw error
 				return data
 			}
@@ -40,18 +45,21 @@ export const useCreatePost = () => {
 	
 	return useMutation({
 		mutationFn: async (postData) => {
+			console.log('🚀 Creating post with data:', postData);
 			const { data, error } = await supabaseHelpers.createPost(postData)
+			console.log('🚀 Create post result:', { data, error });
 			if (error) throw error
 			return data
 		},
 		onSuccess: (data) => {
+			console.log('🚀 Post creation successful:', data);
 			queryClient.invalidateQueries(['posts'])
-			toast.success('Hype check created!')
-			return data[0]
+			// Don't duplicate toast - it's already shown in the component
+			return data
 		},
 		onError: (error) => {
-			toast.error('Failed to create post')
-			console.error('Create post error:', error)
+			console.error('🚀 Post creation failed:', error);
+			// Don't duplicate toast - let the component handle it
 		}
 	})
 }
@@ -104,16 +112,21 @@ export const useUpvotePost = (postId) => {
 	
 	return useMutation({
 		mutationFn: async () => {
-			const { error } = await supabaseHelpers.upvotePost(postId)
+			console.log('🚀 Upvoting post:', postId);
+			const { data, error } = await supabaseHelpers.upvotePost(postId)
+			console.log('🚀 Upvote result:', { data, error });
 			if (error) throw error
+			return data
 		},
-		onSuccess: () => {
+		onSuccess: (data) => {
+			console.log('🚀 Upvote successful:', data);
 			queryClient.invalidateQueries(['post', postId])
+			queryClient.invalidateQueries(['posts'])
 			toast.success('Hyped!')
 		},
 		onError: (error) => {
+			console.error('🚀 Upvote failed:', error);
 			toast.error('Failed to upvote')
-			console.error('Upvote error:', error)
 		}
 	})
 }

@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Search, Plus, Film, ExternalLink, AlertTriangle } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-// Using real Supabase integration
-import { supabaseHelpers } from "../../utils/supabase.js";
+import { useCreatePost } from "../../hooks/usePosts";
 import { searchMovies, getMovieDetails } from "../../utils/tmdbApi.js";
+import { generatePostTitle } from "../../utils/titleUtils.js";
+import { checkForDuplicates } from "../../utils/duplicateDetection.js";
 import toast from "react-hot-toast";
 
 // Helper function to extract YouTube video ID from various URL formats
@@ -28,6 +29,7 @@ const extractYoutubeVideoId = (url) => {
 
 const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 	const { user } = useAuth();
+	const createPostMutation = useCreatePost();
 	const [searchResults, setSearchResults] = useState([]);
 	const [selectedMovie, setSelectedMovie] = useState(null);
 	const [isSearching, setIsSearching] = useState(false);
@@ -39,9 +41,8 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 		register,
 		handleSubmit,
 		setValue,
-		watch, // Add watch to monitor form values
 		formState: { errors },
-	} = useForm(); // Track if movie data has been processed
+	} = useForm(); // Initialize react-hook-form
 	const [movieDataProcessed, setMovieDataProcessed] = useState(false);
 
 	// Handle prefilled movie data from upcoming movies
@@ -97,7 +98,7 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 
 				// Process duplicates check in background
 				setTimeout(() => {
-					checkForDuplicates(movieData).catch((err) => {
+					handleDuplicateCheck(movieData).catch((err) => {
 						console.error(
 							"🔍 Background duplicate check failed:",
 							err,
@@ -105,73 +106,83 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 					});
 				}, 100);
 
-				// Fetch movie details including trailer in background
-				setTimeout(async () => {
-					try {
-						console.log(
-							"🎬 Fetching trailer data for prefilled movie:",
-							movieData.id,
-						);
-						const detailedMovie = await getMovieDetails(
-							movieData.id,
-						);
+				// Fetch trailer details with a safety timeout
+				setTimeout(() => {
+					const loadingToast = toast.loading("Loading movie details...");
+					
+					// Set a safety timeout to prevent infinite loading
+					const safetyTimeout = setTimeout(() => {
+						toast.dismiss(loadingToast);
+						console.warn("🎬 Trailer fetch timed out");
+					}, 8000);
+					
+					getMovieDetails(movieData.id)
+						.then(detailedMovie => {
+							// Clear the safety timeout since we got data
+							clearTimeout(safetyTimeout);
+							toast.dismiss(loadingToast);
+							
+							// Process the trailer information
+							let trailerUrl = null;
+							if (
+								detailedMovie.videos &&
+								detailedMovie.videos.results &&
+								detailedMovie.videos.results.length > 0
+							) {
+								// Find official trailer or teaser
+								const trailers =
+									detailedMovie.videos.results.filter(
+										(video) =>
+											video.site === "YouTube" &&
+											(video.type === "Trailer" ||
+												video.type === "Teaser") &&
+											video.official,
+									);
 
-						// Extract trailer information
-						let trailerUrl = null;
-						if (
-							detailedMovie.videos &&
-							detailedMovie.videos.results &&
-							detailedMovie.videos.results.length > 0
-						) {
-							// Find official trailer or teaser
-							const trailers =
-								detailedMovie.videos.results.filter(
-									(video) =>
-										video.site === "YouTube" &&
-										(video.type === "Trailer" ||
-											video.type === "Teaser") &&
-										video.official,
+								// Prioritize official trailers over teasers
+								const officialTrailer = trailers.find(
+									(video) => video.type === "Trailer",
+								);
+								const officialTeaser = trailers.find(
+									(video) => video.type === "Teaser",
 								);
 
-							// Prioritize official trailers over teasers
-							const officialTrailer = trailers.find(
-								(video) => video.type === "Trailer",
-							);
-							const officialTeaser = trailers.find(
-								(video) => video.type === "Teaser",
-							);
+								// Select the best video
+								const bestVideo =
+									officialTrailer ||
+									officialTeaser ||
+									(trailers.length > 0 ? trailers[0] : null);
 
-							// Select the best video
-							const bestVideo =
-								officialTrailer ||
-								officialTeaser ||
-								(trailers.length > 0 ? trailers[0] : null);
+								if (bestVideo) {
+									trailerUrl = `https://www.youtube.com/watch?v=${bestVideo.key}`;
+									console.log(
+										"🎬 Found trailer URL for prefilled movie:",
+										trailerUrl,
+									);
 
-							if (bestVideo) {
-								trailerUrl = `https://www.youtube.com/watch?v=${bestVideo.key}`;
-								console.log(
-									"🎬 Found trailer URL for prefilled movie:",
-									trailerUrl,
-								);
-
-								// Populate the trailer URL field
-								setValue("trailerUrl", trailerUrl);
+									// Populate the trailer URL field
+									setValue("trailerUrl", trailerUrl);
+								}
 							}
-						}
 
-						// Update selected movie with enhanced data
-						setSelectedMovie((prevMovie) => ({
-							...prevMovie,
-							...detailedMovie,
-							trailer_url: trailerUrl,
-						}));
-					} catch (error) {
-						console.error(
-							"🎬 Error fetching trailer for prefilled movie:",
-							error,
-						);
-						// Continue with basic movie data if trailer fetch fails
-					}
+							// Update selected movie with enhanced data
+							setSelectedMovie((prevMovie) => ({
+								...prevMovie,
+								...detailedMovie,
+								trailer_url: trailerUrl,
+							}));
+						})
+						.catch(error => {
+							// Clear safety timeout and dismiss toast on error
+							clearTimeout(safetyTimeout);
+							toast.dismiss(loadingToast);
+							
+							console.error(
+								"🎬 Error fetching trailer for prefilled movie:",
+								error,
+							);
+							// Continue with basic movie data if trailer fetch fails
+						});
 				}, 200);
 			} catch (error) {
 				console.error(
@@ -184,7 +195,7 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 		}
 	}, [prefilledMovie, setValue, movieDataProcessed]);
 
-	const checkForDuplicates = async (movie) => {
+	const handleDuplicateCheck = async (movie) => {
 		if (!movie || !movie.title) {
 			console.log("🔍 No movie title to check for duplicates");
 			setDuplicateWarning(null);
@@ -193,17 +204,11 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 
 		try {
 			console.log("🔍 Checking for duplicates with title:", movie.title);
-			const { data: existingPosts, error } =
-				await supabaseHelpers.searchPosts(movie.title);
-
-			if (error) {
-				console.error("🔍 Error checking duplicates:", error);
-				return;
-			}
-
-			if (existingPosts && existingPosts.length > 0) {
-				console.log("🔍 Found existing posts:", existingPosts);
-				setDuplicateWarning(existingPosts[0]);
+			const duplicates = await checkForDuplicates(movie.title);
+			
+			if (duplicates && duplicates.length > 0) {
+				console.log("🔍 Found existing posts:", duplicates);
+				setDuplicateWarning(duplicates[0]);
 			} else {
 				console.log("🔍 No duplicate posts found");
 				setDuplicateWarning(null);
@@ -213,8 +218,6 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 			// Don't set duplicate warning if there was an error - better UX to continue
 		}
 	};
-
-	// Remove unused searchQuery variable since we handle search in onChange
 
 	const handleMovieSearch = async (query) => {
 		if (!query || query.length < 2) {
@@ -267,11 +270,17 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 		setSelectedMovie(movie);
 		setSearchResults([]);
 		setValue("searchQuery", movie.title);
-
+		
 		// Create a loading toast that we'll dismiss when done
 		const loadingToast = toast.loading(
 			"Finding trailer and movie details...",
 		);
+		
+		// Set a safety timeout to ensure we don't get stuck in loading state
+		const toastTimeout = setTimeout(() => {
+			toast.dismiss(loadingToast);
+			toast.error("Loading movie details took too long. Please try again.");
+		}, 10000); // 10 second safety timeout
 
 		try {
 			console.log(
@@ -384,91 +393,106 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 			toast.error("Could not load trailer information");
 			// Keep using the basic movie data even if fetching details fails
 		} finally {
-			// Dismiss the loading toast
+			// Clear the safety timeout and dismiss the loading toast
+			clearTimeout(toastTimeout);
 			toast.dismiss(loadingToast);
 		}
 
 		// Check for duplicates
-		await checkForDuplicates(movie);
+		await handleDuplicateCheck(movie);
 	};
 
 	const onSubmit = async (data) => {
-		console.log("🔍 Form submitted with data:", data);
-		console.log("🔍 Selected movie:", selectedMovie);
-
+		// Validate required data
 		if (!selectedMovie) {
 			toast.error("Please select a movie from search results");
 			return;
 		}
 
-		// Check if user exists (for testing purposes)
-		if (!user) {
-			toast.error("You need to be logged in to create a post");
-			console.log("No user found, cannot create post");
+		if (!selectedMovie.title || !selectedMovie.title.trim()) {
+			toast.error("Selected movie must have a title");
+			return;
+		}
+
+		if (!data.content || !data.content.trim()) {
+			toast.error("Please provide your reaction to the movie");
 			return;
 		}
 
 		// Prevent double submissions
 		if (isLoading) {
-			console.log("🔍 Form submission already in progress");
+			return;
+		}
+		
+		// Check authentication status
+		if (!user) {
+			toast.error("Please log in to create a post", {
+				duration: 4000,
+				icon: '🔒',
+			});
+			return;
+		}
+		
+		// Verify active session
+		try {
+			if (!user) {
+				toast.error("Your login session has expired. Please log in again.");
+				return;
+			}
+		} catch (err) {
+			console.error("Authentication error:", err);
+			toast.error("Authentication error. Please try logging out and back in.");
 			return;
 		}
 
 		setIsLoading(true);
+		const loadingToast = toast.loading("Creating hype check...");
+		
 		try {
-			// Make sure we're handling the poster path correctly - could be full URL or just path
-			// We've already processed this in the prefilled effect, but double-check here for safety
+			// Prepare poster URL (ensure full path)
 			let imageUrl = selectedMovie.poster_path;
 			if (imageUrl && !imageUrl.startsWith("http")) {
 				imageUrl = `https://image.tmdb.org/t/p/w500${imageUrl}`;
 			}
 
+			// Create post data with correct schema field names
+			// Generate a default title using our utility function
+			const defaultTitle = generatePostTitle(selectedMovie.title);
+			
+			// Make sure we have all required data
+			if (!user?.id) {
+				toast.error("User session appears invalid. Please try logging in again.");
+				return;
+			}
+			
 			const postData = {
 				user_id: user.id,
-				title:
-					data.title || `${selectedMovie.title} - First Impressions`,
-				content: data.content || null,
-				image_url: imageUrl,
-				trailer_url: data.trailerUrl || null,
-				movie_title: selectedMovie.title,
-				upvotes: 0,
+				title: data.title?.trim() || defaultTitle,
+				movie_title: selectedMovie.title.trim(), // Required and validated
+				image_url: imageUrl || null, // Matches actual schema
+				trailer_url: data.trailerUrl?.trim() || null,
+				content: data.content.trim() // Required and validated - matches actual schema
 			};
+			
+			console.log("Submitting post data:", postData);
 
-			console.log("🔍 Creating post with data:", postData);
-
-			// Add timeout for better UX feedback even if the request is fast
-			const startTime = Date.now();
-
-			const { data: newPost, error } =
-				await supabaseHelpers.createPost(postData);
-
-			// Ensure minimum loading time for better UX
-			const elapsed = Date.now() - startTime;
-			if (elapsed < 500) {
-				await new Promise((resolve) =>
-					setTimeout(resolve, 500 - elapsed),
-				);
-			}
-
-			if (error) {
-				console.error("🔍 Error creating post:", error);
-				toast.error(error.message || "Failed to create post");
-			} else if (!newPost || !newPost[0]) {
-				console.error("🔍 No post data returned");
-				toast.error("Failed to create post - no data returned");
-			} else {
-				console.log("🔍 Post created successfully:", newPost[0]);
+			// Create the post using the mutation
+			const newPost = await createPostMutation.mutateAsync(postData);
+			
+			// Handle successful creation
+			console.log("Created post:", newPost);
+			
+			if (newPost?.id) {
 				toast.success("Hype check created!");
-
-				// Navigate only after we're sure the submission succeeded
-				if (newPost[0]?.id) {
-					onPostCreated?.(newPost[0].id);
-				}
+				setTimeout(() => onPostCreated?.(newPost.id), 300);
+			} else {
+				toast.error("Post created but missing ID. Please check your posts.");
 			}
-		} catch (error) {
-			console.error("🔍 Exception creating post:", error);
-			toast.error("Something went wrong");
+		} catch (err) {
+			console.error("Post creation error:", err);
+			toast.error("Something went wrong creating your post");
 		} finally {
+			toast.dismiss(loadingToast);
 			setIsLoading(false);
 		}
 	};
@@ -914,17 +938,24 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 				</p>
 			</div>
 
-			{/* Your Reaction (Optional) */}
+			{/* Your Reaction (Required) */}
 			<div>
 				<label className="block font-mono text-sm font-bold text-concrete-800 mb-2">
-					YOUR REACTION (OPTIONAL)
+					YOUR REACTION *
 				</label>
 				<textarea
-					{...register("content")}
+					{...register("content", {
+						required: "Please share your thoughts about this movie"
+					})}
 					rows={4}
 					className="w-full px-4 py-3 bg-concrete-50 border-3 border-black font-mono focus:outline-none focus:bg-white focus:shadow-brutal-sm transition-all resize-none"
 					placeholder="What do you think about this movie? Excited for the trailer? Share your expectations..."
 				/>
+				{errors.content && (
+					<p className="mt-1 text-theater-red font-mono text-sm">
+						{errors.content.message}
+					</p>
+				)}
 				<p className="mt-2 text-xs font-mono text-concrete-600">
 					Your thoughts and expectations about the movie
 				</p>
@@ -934,17 +965,24 @@ const MovieSearchForm = ({ onPostCreated, prefilledMovie }) => {
 			<button
 				type="submit"
 				disabled={isLoading || !selectedMovie}
-				className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-black hover:bg-gray-800 text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+				className={`w-full flex items-center justify-center gap-2 px-6 py-4 ${
+					user ? "bg-black hover:bg-gray-800" : "bg-theater-red hover:bg-red-700"
+				} text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
 			>
 				{isLoading ? (
 					"CREATING HYPE CHECK..."
 				) : (
 					<>
 						<Plus size={20} />
-						{user ? "CREATE HYPE CHECK" : "TEST MOVIE SEARCH"}
+						{user ? "CREATE HYPE CHECK" : "LOGIN TO CREATE POST"}
 					</>
 				)}
 			</button>
+			{!user && selectedMovie && (
+				<p className="mt-2 text-center font-mono text-sm text-theater-red">
+					You need to be logged in to create a post
+				</p>
+			)}
 		</form>
 	);
 };
