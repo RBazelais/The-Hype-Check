@@ -78,7 +78,7 @@
   }
   
   .btn-primary {
-    @apply btn-base bg-theater-red hover:bg-red-700 text-white;
+    @apply btn-base bg-red-600 hover:bg-red-700 text-white;
   }
   
   .btn-secondary {

@@ -40,7 +40,7 @@ const SpoilerText = ({ content, autoCloseDelay = 5000 }) => {
 	return (
 		<button
 			onClick={handleReveal}
-			className="inline-flex items-center gap-1 bg-theater-red text-white px-2 py-1 border-2 border-black font-bold hover:bg-red-700 transition-colors cursor-pointer"
+			className="inline-flex items-center gap-1 bg-red-600 text-white px-2 py-1 border-2 border-black font-bold hover:bg-red-700 transition-colors cursor-pointer"
 		>
 			<Eye size={14} />
 			<span>SPOILER - CLICK TO REVEAL</span>

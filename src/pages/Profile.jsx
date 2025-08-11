@@ -40,7 +40,7 @@ const Profile = () => {
 	if (!user || !profile) {
 		return (
 			<div className="max-w-4xl mx-auto text-center py-16">
-				<div className="bg-theater-red border-5 border-black p-12 inline-block shadow-brutal">
+				<div className="bg-red-600 border-5 border-black p-12 inline-block shadow-brutal">
 					<h2 className="font-brutal text-3xl text-white mb-4">
 						ACCESS DENIED
 					</h2>
@@ -92,7 +92,7 @@ const Profile = () => {
 
 					{/* Stats */}
 					<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-						<div className="bg-theater-red border-3 border-black p-4 text-center">
+						<div className="bg-red-600 border-3 border-black p-4 text-center">
 							<div className="text-2xl font-brutal text-white mb-1">
 								{totalPosts}
 							</div>
@@ -153,7 +153,7 @@ const Profile = () => {
 				<div className="space-y-6">
 					{postsLoading ? (
 						<div className="text-center py-12">
-							<div className="bg-theater-red text-white px-8 py-4 border-5 border-black font-brutal text-xl shadow-brutal inline-block">
+							<div className="bg-red-600 text-white px-8 py-4 border-5 border-black font-brutal text-xl shadow-brutal inline-block">
 								LOADING YOUR POSTS...
 							</div>
 						</div>
@@ -232,7 +232,7 @@ const Profile = () => {
 							</p>
 							<Link
 								to="/create"
-								className="inline-block px-6 py-3 bg-theater-red hover:bg-red-700 text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all"
+								className="inline-block px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all"
 							>
 								CREATE YOUR FIRST POST
 							</Link>
@@ -243,7 +243,7 @@ const Profile = () => {
 				<div className="space-y-4">
 					{commentsLoading ? (
 						<div className="text-center py-12">
-							<div className="bg-theater-red text-white px-8 py-4 border-5 border-black font-brutal text-xl shadow-brutal inline-block">
+							<div className="bg-red-600 text-white px-8 py-4 border-5 border-black font-brutal text-xl shadow-brutal inline-block">
 								LOADING YOUR COMMENTS...
 							</div>
 						</div>

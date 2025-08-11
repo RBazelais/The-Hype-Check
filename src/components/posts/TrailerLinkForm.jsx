@@ -301,7 +301,7 @@ const TrailerLinkForm = ({ onPostCreated }) => {
 				type="submit"
 				disabled={isLoading || !user}
 				className={`w-full flex items-center justify-center gap-2 px-6 py-4 ${
-					user ? "bg-theater-red hover:bg-theater-gold" : "bg-concrete-400"
+					user ? "bg-red-600 hover:bg-yellow-500" : "bg-concrete-400"
 				} text-white font-mono font-bold border-3 border-black shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
 			>
 				{isLoading ? (

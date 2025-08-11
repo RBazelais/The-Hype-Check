@@ -105,7 +105,7 @@ const EditPost = () => {
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center min-h-64 px-4">
-				<div className="bg-theater-red text-white px-6 py-4 lg:px-12 lg:py-6 border-2 lg:border-5 border-black font-brutal text-xl lg:text-2xl shadow-brutal-sm lg:shadow-brutal">
+				<div className="bg-red-600 text-white px-6 py-4 lg:px-12 lg:py-6 border-2 lg:border-5 border-black font-brutal text-xl lg:text-2xl shadow-brutal-sm lg:shadow-brutal">
 					LOADING EDITOR...
 				</div>
 			</div>
@@ -142,7 +142,7 @@ const EditPost = () => {
 				<div className="flex items-center justify-between mb-4">
 					<Link
 						to="/"
-						className="inline-flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2 bg-theater-red hover:bg-red-700 text-white font-mono font-bold border-2 lg:border-3 border-black shadow-brutal-sm lg:shadow-brutal hover:shadow-none transition-all text-sm lg:text-base"
+						className="inline-flex items-center gap-2 px-3 py-2 lg:px-4 lg:py-2 bg-red-600 hover:bg-red-700 text-white font-mono font-bold border-2 lg:border-3 border-black shadow-brutal-sm lg:shadow-brutal hover:shadow-none transition-all text-sm lg:text-base"
 					>
 						<ArrowLeft className="w-4 h-4" />
 						<span className="hidden xs:inline">BACK TO FEED</span>
@@ -265,7 +265,7 @@ const EditPost = () => {
 							<button
 								type="submit"
 								disabled={isSubmitting}
-								className="w-full lg:flex-1 flex items-center justify-center gap-2 px-4 py-3 lg:px-6 lg:py-4 bg-theater-red hover:bg-red-700 text-white font-mono font-bold border-2 lg:border-3 border-black shadow-brutal-sm lg:shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
+								className="w-full lg:flex-1 flex items-center justify-center gap-2 px-4 py-3 lg:px-6 lg:py-4 bg-red-600 hover:bg-red-700 text-white font-mono font-bold border-2 lg:border-3 border-black shadow-brutal-sm lg:shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
 							>
 								{isSubmitting ? (
 									'SAVING CHANGES...'

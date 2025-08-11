@@ -1,6 +1,6 @@
 // src/pages/PostDetail.jsx
 import { useState, useEffect } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ThumbsUp, Edit3, Trash2, User, Clock } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
@@ -94,9 +94,9 @@ const PostDetail = () => {
 
 	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center min-h-64">
-				<div className="bg-theater-red text-white px-12 py-6 border-5 border-black font-brutal text-2xl shadow-brutal">
-					LOADING HYPE CHECK...
+			<div className="flex items-center justify-center min-h-64 px-4">
+				<div className="bg-red-600 text-white px-12 py-6 border-5 border-black font-brutal text-2xl shadow-brutal">
+					LOADING HYPE...
 				</div>
 			</div>
 		)
@@ -107,7 +107,7 @@ const PostDetail = () => {
 			<div className="max-w-4xl mx-auto text-center py-16">
 				<div className="bg-concrete-800 border-5 border-black p-12 inline-block shadow-brutal">
 					<h2 className="font-brutal text-3xl text-white mb-4">
-						HYPE CHECK NOT FOUND
+						POST NOT FOUND
 					</h2>
 					<p className="font-mono text-theater-gold text-lg mb-6">
 						This discussion might have been deleted
@@ -186,7 +186,7 @@ const PostDetail = () => {
 
 					{/* Movie Badge */}
 					<div className="mb-6">
-						<span className="inline-block px-4 py-2 bg-theater-gold text-black font-mono font-bold text-lg border-3 border-black">
+						<span className="inline-block px-4 py-2 bg-yellow-500 text-black font-mono font-bold text-lg border-3 border-black">
 							🎬 {post.movie_title}
 						</span>
 					</div>
@@ -240,7 +240,7 @@ const PostDetail = () => {
 			{post.trailer_url && (
 				<div className="bg-concrete-900 border-5 border-black shadow-brutal mb-8">
 					<div className="p-6">
-						<h2 className="font-brutal text-2xl text-theater-gold mb-4">
+						<h2 className="font-brutal text-2xl text-yellow-500 mb-4">
 							WATCH TRAILER
 						</h2>
 						<TrailerPlayer url={post.trailer_url} />

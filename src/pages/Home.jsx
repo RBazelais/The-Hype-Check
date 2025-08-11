@@ -24,9 +24,11 @@ const Home = () => {
 	const [allCachedMovies, setAllCachedMovies] = useState([]); // Cache all fetched movies as array
 	const [displayedMovies, setDisplayedMovies] = useState([]); // Movies currently shown
 	const [hasMoreMovies, setHasMoreMovies] = useState(true);
+	const [displayedPostCount, setDisplayedPostCount] = useState(5); // Show 5 posts initially
 	const searchQuery = searchParams.get("search") || "";
 
 	const MOVIES_PER_PAGE = 20; // TMDB typical page size
+	const POSTS_PER_PAGE = 5; // Posts to load at a time
 	const MAX_PAGES = 25; // ~1 year of movies
 
 	// Fetch posts based on sort and search
@@ -137,6 +139,10 @@ const Home = () => {
 		}
 	};
 
+	const handleLoadMorePosts = () => {
+		setDisplayedPostCount(prev => prev + POSTS_PER_PAGE);
+	};
+
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center min-h-64 px-4">
@@ -155,7 +161,7 @@ const Home = () => {
 					<h1 className="font-brutal text-2xl lg:text-4xl mb-2">
 						{searchQuery
 							? `SEARCH: "${searchQuery}"`
-							: "LATEST HYPE"}
+							: "HYPE CHECKPOINT"}
 					</h1>
 					<p className="font-mono text-sm lg:text-lg">
 						{searchQuery
@@ -173,7 +179,7 @@ const Home = () => {
 						SORT BY:
 					</span>
 				</div>
-				<div className="flex flex-col xs:flex-row gap-3 w-full lg:w-auto">
+				<div className="flex flex-col xs:flex-row lg:flex-row gap-3 w-full lg:w-auto">
 					<button
 						onClick={() => handleSortChange("created_at")}
 						className={`w-full xs:w-auto px-4 py-3 lg:px-6 lg:py-3 font-mono font-bold border-2 lg:border-5 border-black transition-all flex items-center justify-center gap-2 text-sm lg:text-base ${
@@ -201,11 +207,28 @@ const Home = () => {
 
 			{/* Posts Section */}
 			{posts && Array.isArray(posts) && posts.length > 0 ? (
-				<div className="space-y-4 lg:space-y-6 mb-8 lg:mb-12">
-					{posts.filter(post => post && post.id).map((post) => (
-						<PostCard key={post.id} post={post} />
-					))}
-				</div>
+				<>
+					<div className="space-y-4 lg:space-y-6 mb-8 lg:mb-12">
+						{posts.filter(post => post && post.id).slice(0, displayedPostCount).map((post) => (
+							<PostCard key={post.id} post={post} />
+						))}
+					</div>
+					
+					{/* Load More Posts Button */}
+					{posts.length > displayedPostCount && (
+						<div className="text-center mb-8 lg:mb-12">
+							<button
+								onClick={handleLoadMorePosts}
+								className="px-6 py-3 lg:px-8 lg:py-4 bg-red-600 hover:bg-red-700 text-white font-mono font-bold border-2 lg:border-4 border-black shadow-brutal-sm lg:shadow-brutal hover:shadow-none transition-all"
+							>
+								LOAD MORE HYPE CHECKS
+							</button>
+							<p className="font-mono text-xs text-concrete-600 mt-2">
+								Showing {Math.min(displayedPostCount, posts.length)} of {posts.length} discussions
+							</p>
+						</div>
+					)}
+				</>
 			) : searchQuery ? (
 				<div className="text-center py-8 lg:py-12 px-4">
 					<div className="bg-red-600 text-white border-2 lg:border-5 border-black p-6 lg:p-12 inline-block shadow-brutal-sm lg:shadow-brutal max-w-full">
@@ -220,11 +243,11 @@ const Home = () => {
 				</div>
 			) : (
 				<div className="text-center py-6 lg:py-8 mb-6 lg:mb-8 px-4">
-					<div className="bg-theater-red text-black border-2 lg:border-5 border-black p-6 lg:p-8 inline-block shadow-brutal-sm lg:shadow-brutal max-w-full">
+					<div className="bg-red-600 text-white border-2 lg:border-5 border-black p-6 lg:p-8 inline-block shadow-brutal-sm lg:shadow-brutal max-w-full">
 						<h3 className="font-brutal text-xl lg:text-2xl mb-2">
 							NO HYPE CHECKS YET
 						</h3>
-						<p className="font-mono text-sm lg:text-lg text-concrete-200 mb-4">
+						<p className="font-mono text-sm lg:text-lg text-white mb-4">
 							Check out these upcoming movies and start the hype!
 						</p>
 					</div>
