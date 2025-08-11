@@ -10,7 +10,7 @@ import {
 	Star,
 	Plus,
 } from "lucide-react";
-// Using hooks instead of direct supabase calls
+
 import { usePosts } from "../hooks/usePosts";
 import { getUpcomingMovies } from "../utils/tmdbApi";
 import PostCard from "../components/posts/PostCard";
@@ -20,7 +20,14 @@ const Home = () => {
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
 	const [sortBy, setSortBy] = useState("created_at");
+	const [displayedMovieCount, setDisplayedMovieCount] = useState(20); // How many to show
+	const [allCachedMovies, setAllCachedMovies] = useState([]); // Cache all fetched movies as array
+	const [displayedMovies, setDisplayedMovies] = useState([]); // Movies currently shown
+	const [hasMoreMovies, setHasMoreMovies] = useState(true);
 	const searchQuery = searchParams.get("search") || "";
+
+	const MOVIES_PER_PAGE = 20; // TMDB typical page size
+	const MAX_PAGES = 25; // ~1 year of movies
 
 	// Fetch posts based on sort and search
 	const {
@@ -30,23 +37,55 @@ const Home = () => {
 		refetch
 	} = usePosts(sortBy, searchQuery);
 
-	// Fetch upcoming movies from TMDB
-	const { data: upcomingMovies, error: moviesError } = useQuery({
-		queryKey: ["upcoming-movies"],
+	// Fetch ALL upcoming movies once and cache them
+	const { data: upcomingMovies, error: moviesError, isLoading: moviesLoading } = useQuery({
+		queryKey: ["upcoming-movies-all"],
 		queryFn: async () => {
 			try {
-				const movies = await getUpcomingMovies();
-				return movies || [];
+				let allMovies = [];
+				let currentPage = 1;
+				let shouldContinue = true;
+				
+				while (shouldContinue && currentPage <= MAX_PAGES) {
+					const movies = await getUpcomingMovies(currentPage);
+					
+					if (!movies || movies.length === 0) {
+						shouldContinue = false;
+						break;
+					}
+					
+					allMovies = [...allMovies, ...movies];
+					currentPage++;
+				}
+				
+				return allMovies;
 			} catch (error) {
 				console.error('Failed to fetch upcoming movies:', error);
 				return [];
 			}
 		},
-		staleTime: 1000 * 60 * 30,
-		enabled: true, // Always fetch upcoming movies
+		staleTime: 1000 * 60 * 60, // 1 hour cache
+		enabled: true,
 		retry: 3,
 		retryDelay: 1000,
 	});
+
+	// Update cache when all movies are fetched
+	useEffect(() => {
+		if (upcomingMovies && Array.isArray(upcomingMovies)) {
+			setAllCachedMovies(upcomingMovies);
+			setHasMoreMovies(upcomingMovies.length > MOVIES_PER_PAGE);
+		}
+	}, [upcomingMovies]);
+
+	// Update displayed movies based on display count
+	useEffect(() => {
+		if (allCachedMovies.length > 0) {
+			const slicedMovies = allCachedMovies.slice(0, displayedMovieCount);
+			setDisplayedMovies(slicedMovies);
+			setHasMoreMovies(allCachedMovies.length > displayedMovieCount);
+		}
+	}, [allCachedMovies, displayedMovieCount]);
 
 	useEffect(() => {
 		if (error) {
@@ -92,6 +131,12 @@ const Home = () => {
 		});
 	};
 
+	const handleLoadMoreMovies = () => {
+		if (hasMoreMovies) {
+			setDisplayedMovieCount(prev => prev + MOVIES_PER_PAGE);
+		}
+	};
+
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center min-h-64 px-4">
@@ -110,7 +155,7 @@ const Home = () => {
 					<h1 className="font-brutal text-2xl lg:text-4xl mb-2">
 						{searchQuery
 							? `SEARCH: "${searchQuery}"`
-							: "LATEST HYPE CHECKS"}
+							: "LATEST HYPE"}
 					</h1>
 					<p className="font-mono text-sm lg:text-lg">
 						{searchQuery
@@ -187,19 +232,27 @@ const Home = () => {
 			)}
 
 			{/* Upcoming Movies Section */}
-			{upcomingMovies &&
-				Array.isArray(upcomingMovies) &&
-				upcomingMovies.length > 0 && (
-					<div className="mb-6">
-						<h2 className="font-brutal text-2xl lg:text-3xl text-concrete-900 mb-2">
-							UPCOMING MOVIES
-						</h2>
-						<p className="font-mono text-sm lg:text-base text-concrete-600 mb-4">
-							Get ready for the hype! Create the first review for
-							any of these upcoming films.
-						</p>
+			<div className="mb-6">
+				<h2 className="font-brutal text-2xl lg:text-3xl text-concrete-900 mb-2">
+					UPCOMING MOVIES
+				</h2>
+				<p className="font-mono text-sm lg:text-base text-concrete-600 mb-4">
+					Get ready for the hype! Create the first review for any of these upcoming films.
+				</p>
+
+				{moviesLoading && (
+					<div className="text-center py-8">
+						<div className="bg-theater-gold text-black px-6 py-4 border-2 border-black font-bold text-lg">
+							LOADING UPCOMING MOVIES...
+						</div>
+					</div>
+				)}
+
+				{/* Movies grid */}
+				{displayedMovies && Array.isArray(displayedMovies) && displayedMovies.length > 0 ? (
+					<>
 						<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mt-4">
-							{upcomingMovies.map((movie) => (
+							{displayedMovies.map((movie) => (
 								<div
 									key={movie.id}
 									onClick={() => handleMovieClick(movie)}
@@ -245,8 +298,39 @@ const Home = () => {
 								</div>
 							))}
 						</div>
+						
+						{/* Load More Button */}
+						{hasMoreMovies && (
+							<div className="mt-6 text-center">
+								<button
+									onClick={handleLoadMoreMovies}
+									disabled={moviesLoading || !hasMoreMovies}
+									className="px-6 py-3 lg:px-8 lg:py-4 bg-theater-gold hover:bg-street-yellow text-black font-mono font-bold border-2 lg:border-4 border-black shadow-brutal-sm lg:shadow-brutal hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+								>
+									{moviesLoading ? (
+										<span className="flex items-center gap-2">
+											<div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+											LOADING...
+										</span>
+									) : (
+										'LOAD MORE MOVIES'
+									)}
+								</button>
+								<p className="font-mono text-xs text-concrete-600 mt-2">
+									Showing {displayedMovies.length} movies • Up to 1 year ahead
+								</p>
+							</div>
+						)}
+					</>
+				) : !moviesLoading ? (
+					<div className="text-center py-8">
+						<div className="bg-red-600 text-white border-2 border-black p-6 inline-block">
+							<h3 className="font-brutal text-xl mb-2">NO UPCOMING MOVIES FOUND</h3>
+							<p className="font-mono text-sm">Check back later for new releases!</p>
+						</div>
 					</div>
-				)}
+				) : null}
+			</div>
 		</div>
 	);
 };

@@ -38,16 +38,32 @@ export const searchMovies = async (query) => {
 	}
 }
 
-export const getUpcomingMovies = async () => {
+export const getUpcomingMovies = async (page = 1) => {
 	try {
 		const response = await tmdbApi.get('/movie/upcoming', {
 			params: {
 				language: 'en-US',
-				page: 1
+				page: page
 			}
 		})
 		
-		return response.data.results || []
+		// Filter movies from January 1st of current year onwards
+		const currentYear = new Date().getFullYear()
+		const januaryFirst = `${currentYear}-01-01`
+		
+		const upcomingMovies = (response.data.results || []).filter(movie => {
+			if (!movie.release_date) {
+				return false;
+			}
+			
+			const releaseYear = parseInt(movie.release_date.split('-')[0])
+			const isCurrentYearOrLater = releaseYear >= currentYear
+			const isJanuaryOrLater = movie.release_date >= januaryFirst
+			
+			return isCurrentYearOrLater && isJanuaryOrLater
+		})
+		
+		return upcomingMovies
 	} catch (error) {
 		console.error('TMDB API error:', error)
 		throw error
