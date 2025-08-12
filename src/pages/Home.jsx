@@ -260,7 +260,7 @@ const Home = () => {
 					UPCOMING MOVIES
 				</h2>
 				<p className="font-mono text-sm lg:text-base text-concrete-600 mb-4">
-					Get ready for the hype! Create the first review for any of these upcoming films.
+					Is the hype legit?! Create the first review for any of these upcoming films.
 				</p>
 
 				{moviesLoading && (

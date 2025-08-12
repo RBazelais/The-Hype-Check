@@ -3,13 +3,12 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { MessageCircle, AlertCircle } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-// Using real Supabase integration
-import { supabaseHelpers } from '../../utils/supabase'
-import toast from 'react-hot-toast'
+import { useCreateComment } from '../../hooks/useComments'
 
 const CommentForm = ({ postId, onCommentAdded }) => {
 	const { user } = useAuth()
 	const [isSubmitting, setIsSubmitting] = useState(false)
+	const createComment = useCreateComment(postId)
 	
 	const {
 		register,
@@ -53,19 +52,11 @@ const CommentForm = ({ postId, onCommentAdded }) => {
 				content: data.content.trim()
 			}
 
-			const { data: newComment, error } = await supabaseHelpers.createComment(commentData)
-			
-			if (error) {
-				toast.error('Failed to post comment')
-				console.error('Error posting comment:', error)
-			} else {
-				toast.success('Comment posted!')
-				reset()
-				onCommentAdded?.(newComment)
-			}
+			const newComment = await createComment.mutateAsync(commentData)
+			reset()
+			onCommentAdded?.(newComment)
 		} catch (error) {
-			toast.error('Something went wrong')
-			console.error('Error:', error)
+			console.error('Error posting comment:', error)
 		} finally {
 			setIsSubmitting(false)
 		}

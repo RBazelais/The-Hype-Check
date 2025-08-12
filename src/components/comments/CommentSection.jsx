@@ -1,29 +1,43 @@
 // src/components/comments/CommentSection.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import CommentForm from './CommentForm'
 import Comment from './Comment'
 
 const CommentSection = ({ postId, comments }) => {
 	const { user } = useAuth()
-	const [allComments, setAllComments] = useState(comments || [])
+	const [allComments, setAllComments] = useState(
+		(comments || []).filter(comment => comment && comment.id)
+	)
+
+	// Sync local state with props when comments change
+	useEffect(() => {
+		const validComments = (comments || []).filter(comment => comment && comment.id)
+		setAllComments(validComments)
+	}, [comments])
 
 	const handleCommentAdded = (newComment) => {
-		setAllComments(prev => [newComment, ...prev])
+		if (newComment && newComment.id) {
+			setAllComments(prev => [newComment, ...prev])
+		}
 	}
 
 	const handleCommentUpdated = (updatedComment) => {
-		setAllComments(prev => 
-			prev.map(comment => 
-				comment.id === updatedComment.id ? updatedComment : comment
+		if (updatedComment && updatedComment.id) {
+			setAllComments(prev => 
+				prev.map(comment => 
+					comment && comment.id === updatedComment.id ? updatedComment : comment
+				)
 			)
-		)
+		}
 	}
 
 	const handleCommentDeleted = (deletedCommentId) => {
-		setAllComments(prev => 
-			prev.filter(comment => comment.id !== deletedCommentId)
-		)
+		if (deletedCommentId) {
+			setAllComments(prev => 
+				prev.filter(comment => comment && comment.id !== deletedCommentId)
+			)
+		}
 	}
 
 	return (
@@ -48,10 +62,11 @@ const CommentSection = ({ postId, comments }) => {
 			{/* Comments List */}
 			{allComments.length > 0 ? (
 				<div className="space-y-4">
-					{allComments.map((comment) => (
+					{allComments.filter(comment => comment && comment.id).map((comment) => (
 						<Comment 
 							key={comment.id} 
 							comment={comment}
+							postId={postId}
 							onCommentUpdated={handleCommentUpdated}
 							onCommentDeleted={handleCommentDeleted}
 						/>

@@ -1,18 +1,17 @@
 // src/components/comments/Comment.jsx
 import { useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
 import { Trash2, User } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-// Using real Supabase integration
+import { useDeleteComment } from '../../hooks/useComments'
 import { supabaseHelpers } from '../../utils/supabase'
-import toast from 'react-hot-toast'
 import SpoilerText from './SpoilerText'
 
-const Comment = ({ comment, onCommentUpdated, onCommentDeleted }) => {
+const Comment = ({ comment, postId, onCommentUpdated, onCommentDeleted }) => {
 	const { user } = useAuth()
 	const [isEditing, setIsEditing] = useState(false)
 	const [editContent, setEditContent] = useState(comment.content)
 	const [isDeleting, setIsDeleting] = useState(false)
+	const deleteComment = useDeleteComment(postId)
 
 	const handleEdit = async () => {
 		if (!editContent.trim()) return
@@ -31,16 +30,17 @@ const Comment = ({ comment, onCommentUpdated, onCommentDeleted }) => {
 	}
 
 	const handleDelete = async () => {
+		if (!window.confirm('Are you sure you want to delete this comment?')) return
+		
 		setIsDeleting(true)
-		const { error } = await supabaseHelpers.deleteComment(comment.id)
-
-		if (error) {
+		try {
+			await deleteComment.mutateAsync(comment.id)
+			onCommentDeleted(comment.id)
+		} catch (error) {
 			console.error('Error deleting comment:', error)
+		} finally {
 			setIsDeleting(false)
-			return
 		}
-
-		onCommentDeleted(comment.id)
 	}
 
 	const formatDate = (dateString) => {

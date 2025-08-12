@@ -11,12 +11,15 @@ export const useCreateComment = (postId) => {
 		mutationFn: async (commentData) => {
 			const { data, error } = await supabaseHelpers.createComment(commentData)
 			if (error) throw error
-			return data
+			return data // Return the single comment object (not an array)
 		},
 		onSuccess: (data) => {
+			// Invalidate all relevant queries to update comment counts everywhere
 			queryClient.invalidateQueries(['post', postId])
+			queryClient.invalidateQueries(['comments', postId])
+			queryClient.invalidateQueries(['posts']) // This updates the home feed
 			toast.success('Comment posted!')
-			return data[0]
+			return data
 		},
 		onError: (error) => {
 			toast.error('Failed to post comment')
@@ -35,7 +38,10 @@ export const useDeleteComment = (postId) => {
 			if (error) throw error
 		},
 		onSuccess: () => {
+			// Invalidate all relevant queries to update comment counts everywhere
 			queryClient.invalidateQueries(['post', postId])
+			queryClient.invalidateQueries(['comments', postId])
+			queryClient.invalidateQueries(['posts']) // This updates the home feed
 			queryClient.invalidateQueries(['user-comments'])
 			toast.success('Comment deleted')
 		},

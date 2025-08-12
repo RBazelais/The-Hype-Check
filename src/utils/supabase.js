@@ -53,7 +53,7 @@ export const supabaseHelpers = {
     // Posts
     async getPosts(sortBy = "created_at") {
         try {
-            // Match the actual schema: content and image_url
+            // Include comments count in the query
             let query = supabase.from("posts").select(`
                 id,
                 title,
@@ -64,7 +64,8 @@ export const supabaseHelpers = {
                 created_at,
                 updated_at,
                 user_id,
-                upvotes
+                upvotes,
+                comments:comments(count)
             `);
 
             if (sortBy === "upvotes") {
@@ -88,11 +89,9 @@ export const supabaseHelpers = {
 
     async getPostById(id) {
         try {
-            // Updated to match your schema
             const { data, error } = await supabase
                 .from("posts")
-                .select(
-                    `
+                .select(`
                     id,
                     title,
                     movie_title,
@@ -103,8 +102,7 @@ export const supabaseHelpers = {
                     updated_at,
                     user_id,
                     upvotes
-                `,
-                )
+                `)
                 .eq("id", id)
                 .single();
 
@@ -113,9 +111,9 @@ export const supabaseHelpers = {
             }
 
             return { data, error };
-        } catch (error) {
-            console.error("Exception in getPostById:", error);
-            return { data: null, error };
+        } catch (exception) {
+            console.error("Exception in getPostById:", exception);
+            return { data: null, error: { message: exception.message || 'Unknown error' } };
         }
     },
 
@@ -218,7 +216,7 @@ export const supabaseHelpers = {
 
     async searchPosts(query) {
         try {
-            // Updated to match your schema: content instead of description, image_url instead of poster_url
+            // Include comments count in the search query
             const { data, error } = await supabase
                 .from("posts")
                 .select(
@@ -232,7 +230,8 @@ export const supabaseHelpers = {
                     created_at,
                     updated_at,
                     user_id,
-                    upvotes
+                    upvotes,
+                    comments:comments(count)
                 `,
                 )
                 .or(
@@ -472,6 +471,7 @@ export const supabaseHelpers = {
                         updated_at,
                         user_id,
                         upvotes,
+                        comments:comments(count),
                         profiles:user_id (
                             id,
                             display_name

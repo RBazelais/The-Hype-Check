@@ -4,7 +4,8 @@ import { formatDistanceToNow } from 'date-fns'
 
 const PostCard = ({ post }) => {
 	const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true })
-	const commentCount = post.comments?.length || 0
+	// Handle the comment count from Supabase's count aggregation
+	const commentCount = post.comments?.[0]?.count || 0
 
 	return (
 		<Link to={`/post/${post.id}`} className="block group">

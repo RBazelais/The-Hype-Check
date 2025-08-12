@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ThumbsUp, Edit3, Trash2, User, Clock } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../hooks/useAuth'
+import { usePost } from '../hooks/usePosts'
 import { supabaseHelpers } from '../utils/supabase'
 import CommentForm from '../components/comments/CommentForm'
 import TrailerPlayer from '../components/posts/TrailerPlayer'
@@ -18,16 +19,8 @@ const PostDetail = () => {
 	const { user } = useAuth()
 	const [isUpvoting, setIsUpvoting] = useState(false)
 
-	// Fetch post details
-	const { data: post, isLoading, error } = useQuery({
-		queryKey: ['post', id],
-		queryFn: async () => {
-			const { data, error } = await supabaseHelpers.getPostById(id)
-			if (error) throw error
-			return data
-		},
-		enabled: !!id
-	})
+	// Fetch post details using the existing hook
+	const { data: post, isLoading, error } = usePost(id)
 
 	// Fetch comments separately
 	const { data: comments = [] } = useQuery({
@@ -35,9 +28,11 @@ const PostDetail = () => {
 		queryFn: async () => {
 			const { data, error } = await supabaseHelpers.getComments(id)
 			if (error) throw error
-			return data
+			return data || []
 		},
-		enabled: !!id
+		enabled: !!id,
+		staleTime: 1000 * 60 * 5, // 5 minutes
+		refetchOnWindowFocus: false
 	})
 
 	// Upvote mutation
@@ -48,6 +43,7 @@ const PostDetail = () => {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries(['post', id])
+			queryClient.invalidateQueries(['comments', id])
 			toast.success('Hyped!')
 		},
 		onError: () => {
@@ -88,6 +84,7 @@ const PostDetail = () => {
 
 	useEffect(() => {
 		if (error) {
+			console.error('PostDetail error:', error);
 			toast.error('Failed to load post')
 		}
 	}, [error])
