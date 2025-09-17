@@ -67,7 +67,7 @@ The following **additional** features are implemented:
 
 Here's a walkthrough of implemented user stories:
 
-![Video Walkthrough](https://submissions.us-east-1.linodeobjects.com/web102/4hGDLPxO.gif)
+![Video Walkthrough](src/assets/HypeCheckv3.gif)
 
 GIF created with ... LICEcap
 
