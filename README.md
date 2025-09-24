@@ -136,12 +136,26 @@ http://localhost:3000
 
 ```
 src/
+├── assets/              # Static assets and media
 ├── components/          # Reusable UI components
-├── pages/              # Route-based page components
-├── hooks/              # Custom React hooks
-├── services/           # Supabase API integration
-├── utils/              # Helper functions and constants
-└── assets/             # Static assets and media
+│   ├── CommentSection.jsx
+│   ├── Header.jsx
+│   ├── PostCard.jsx
+│   └── ...
+├── hooks/               # Custom React hooks
+│   └── useAuth.js
+├── pages/               # Route-based page components
+│   ├── Home.jsx
+│   ├── PostDetail.jsx
+│   ├── CreatePost.jsx
+│   └── ...
+├── services/            # Supabase API integration
+│   └── supabaseClient.js
+├── utils/               # Helper functions and constants
+│   └── helpers.js
+├── App.js               # Main React component
+├── index.js             # Entry point
+└── ...
 ```
 
 ## 📊 Technical Metrics
